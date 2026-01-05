@@ -152,28 +152,27 @@ const App = () => {
     setAvail(newAvail); save(null, newAvail);
   };
 
-  if (loading) return <div className="loading-screen"><div className="loading-logo">The Videodrome Club</div></div>;
+  if (loading) return <div className="loading-screen"><img src="logo.png" alt="Videodrome" className="loading-logo" /><div className="loading-sub">Club</div></div>;
 
   return (
     <div>
       <header className="header">
         <div className="header-top">
           <div className="logo">
-            <span className="logo-the">the</span>
-            <span className="logo-main">Videodrome</span>
+            <img src="logo.png" alt="Videodrome" className="logo-img" />
             <span className="logo-club">Club</span>
           </div>
           <div className="header-right">
             <select className="user-select" value={user} onChange={e => setUser(e.target.value)}>
               {MEMBERS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
-            <div className="stats">{proposed.length} films · {watched.length} vus{syncing && <span className="sync-icon"> ⟳</span>}</div>
+            <div className="stats">{proposed.length} Films · {watched.length} vus{syncing && <span className="sync-icon"> ⟳</span>}</div>
           </div>
         </div>
         <div className="tabs">
-          <button className={`tab ${tab === 'propositions' ? 'active' : ''}`} onClick={() => setTab('propositions')}>Propositions{proposed.length > 0 && <span className="tab-badge">{proposed.length}</span>}</button>
+          <button className={`tab ${tab === 'propositions' ? 'active' : ''}`} onClick={() => setTab('propositions')}>Propositions</button>
           <button className={`tab ${tab === 'planning' ? 'active' : ''}`} onClick={() => setTab('planning')}>Planning</button>
-          <button className={`tab ${tab === 'historique' ? 'active' : ''}`} onClick={() => setTab('historique')}>Historique{watched.length > 0 && <span className="tab-badge">{watched.length}</span>}</button>
+          <button className={`tab ${tab === 'historique' ? 'active' : ''}`} onClick={() => setTab('historique')}>Historique</button>
           <button className={`tab ${tab === 'membres' ? 'active' : ''}`} onClick={() => setTab('membres')}>Membres</button>
         </div>
       </header>
@@ -181,20 +180,19 @@ const App = () => {
       {tab === 'propositions' && (
         <>
           <div className="controls">
-            <input className="search-box" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
             <select value={sort} onChange={e => setSort(e.target.value)}>
               <option value="favorites">♥ Favoris</option>
-              <option value="votes">▲ Votes</option>
+              <option value="votes">+ Votes</option>
               <option value="recent">Récents</option>
               <option value="year">Année</option>
               <option value="alpha">A-Z</option>
             </select>
-            <button className="btn" onClick={() => setShowAdd(true)}>+ Proposer</button>
+            <button className="btn" onClick={() => setShowAdd(true)}>Rechercher</button>
           </div>
           <main className="main">
             {scheduled && (
               <div className="featured" onClick={() => setSelected(scheduled)}>
-                <div className="featured-label">▶ Prochain film</div>
+                <div className="featured-label">▶ prochain</div>
                 <div className="featured-inner">
                   <div className="featured-poster">
                     {scheduled.poster ? <img src={scheduled.poster} alt="" /> : <div className="vhs-noimg">📼</div>}
@@ -202,7 +200,6 @@ const App = () => {
                   <div className="featured-info">
                     <div className="featured-title">{scheduled.title}</div>
                     <div className="featured-meta">{scheduled.year} · {scheduled.director}</div>
-                    <div className="featured-proposer">{getMember(scheduled.proposedBy).name}</div>
                   </div>
                 </div>
               </div>
@@ -250,23 +247,19 @@ const VHSCard = ({ film, user, onClick, onFav }) => {
     <div className="vhs-case" onClick={onClick}>
       <div className="vhs-wrapper">
         <div className="vhs-sleeve">
-          <div className="vhs-sleeve-title">{film.title}</div>
           <div className="vhs-proposer" style={{background: p.color}}></div>
           <div className="vhs-badges">
-            {favCount > 0 && <div className="vhs-badge fav">♥{favCount}</div>}
-            {voteCount > 0 && <div className="vhs-badge vote">{voteCount}</div>}
+            {favCount > 0 && <div className="vhs-badge">♥{favCount}</div>}
+            {voteCount > 0 && <div className="vhs-badge">+{voteCount}</div>}
           </div>
           <div className="vhs-poster">
             {film.poster ? <img src={film.poster} alt="" loading="lazy" /> : <div className="vhs-noimg">📼</div>}
           </div>
           <button className={`vhs-fav-btn ${isFav ? 'active' : ''}`} onClick={e => { e.stopPropagation(); onFav(); }}>{isFav ? '♥' : '♡'}</button>
-          <div className="vhs-sleeve-info">
-            <div className="vhs-sleeve-label">{film.title}</div>
-            <div className="vhs-sleeve-year">{film.year}</div>
-          </div>
         </div>
         <div className="vhs-tape">
-          <div className="vhs-tape-label"><span>{film.title}</span></div>
+          <div className="vhs-tape-window"></div>
+          <div className="vhs-tape-label">{film.title}</div>
         </div>
       </div>
     </div>
