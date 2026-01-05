@@ -27,8 +27,8 @@ const Toast = ({ message, type, onClose }) => {
 const App = () => {
   const [user, setUser] = React.useState(() => localStorage.getItem('vd_user') || 'seb');
   const [tab, setTab] = React.useState('propositions');
-  const [films, setFilms] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_films')) || []; } catch { return []; } });
-  const [avail, setAvail] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_avail')) || {}; } catch { return {}; } });
+  const [films, setFilms] = React.useState(() => { try { return JSON.parse(localStorage.getItem('videodrome_films')) || []; } catch { return []; } });
+  const [avail, setAvail] = React.useState(() => { try { return JSON.parse(localStorage.getItem('videodrome_availabilities')) || {}; } catch { return {}; } });
   const [search, setSearch] = React.useState('');
   const [sort, setSort] = React.useState('favorites');
   const [selected, setSelected] = React.useState(null);
@@ -37,9 +37,9 @@ const App = () => {
   const [syncing, setSyncing] = React.useState(false);
   const [toast, setToast] = React.useState(null);
 
-  React.useEffect(() => { localStorage.setItem('vd_user', user); }, [user]);
-  React.useEffect(() => { localStorage.setItem('vd_films', JSON.stringify(films)); }, [films]);
-  React.useEffect(() => { localStorage.setItem('vd_avail', JSON.stringify(avail)); }, [avail]);
+  React.useEffect(() => { localStorage.setItem('videodrome_user', user); }, [user]);
+  React.useEffect(() => { localStorage.setItem('videodrome_films', JSON.stringify(films)); }, [films]);
+  React.useEffect(() => { localStorage.setItem('videodrome_availabilities', JSON.stringify(avail)); }, [avail]);
   React.useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
@@ -57,9 +57,28 @@ const App = () => {
   };
 
   const save = async (f, a) => {
-    if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') return;
+    if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') {
+      console.log('Mode local uniquement - pas de Google Sheets configuré');
+      return;
+    }
     setSyncing(true);
-    try { await fetch(SHEETS_API, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ films: f || films, availabilities: a || avail }) }); } catch(e) { console.error(e); }
+    try { 
+      const response = await fetch(SHEETS_API, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'text/plain' }, 
+        body: JSON.stringify({ films: f || films, availabilities: a || avail }) 
+      });
+      const result = await response.json();
+      if (result.success) {
+        console.log('Sauvegarde OK');
+      } else {
+        console.error('Erreur sauvegarde:', result);
+        notify('Erreur sauvegarde', 'error');
+      }
+    } catch(e) { 
+      console.error('Erreur réseau:', e); 
+      notify('Erreur synchro', 'error');
+    }
     setSyncing(false);
   };
 
