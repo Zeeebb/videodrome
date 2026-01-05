@@ -6,7 +6,7 @@ const TMDB_KEY = '2dca580c2a14b55200e784d157207b4d';
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
 
 // ⚠️ REMPLACE PAR TON URL GOOGLE APPS SCRIPT
-const SHEETS_API = 'https://script.google.com/macros/s/AKfycbzzPPdyHwLm1OCJ4mk0FwXijcdpJWsg43nKzvHe1lvxKtLlNXyJtYJTUdRjkXAe5NrSLg/exec';
+const SHEETS_API = 'https://script.google.com/macros/s/AKfycby80XFzghKfU7T0d5fiaEKwzdcsF8jg05pZVvy8CdiYPSyt4IcRBO_BbsrY4SIi0d7sWQ/exec';
 
 const MEMBERS = [
   { id: 'seb', name: 'Seb', color: '#39ff14' },
