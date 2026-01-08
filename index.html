@@ -7,670 +7,30 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&display=swap" rel="stylesheet">
-  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#e63946">
   <style>
-    :root {
-      --cream: #f5f0e6;
-      --red: #e63946;
-      --black: #1a1a1a;
-      --grey: #888;
-    }
-    
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    body {
-      font-family: 'Fraunces', Georgia, serif;
-      background: var(--cream);
-      color: var(--black);
-      min-height: 100vh;
-    }
-    
-    .header {
-      background: var(--black);
-      padding: 1.5rem 2rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    
-    .header-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .logo-bands {
-      display: flex;
-      gap: 2px;
-      height: 38px;
-      width: 3.8rem;
-    }
-    
-    .logo-band { flex: 1; height: 100%; }
-    
-    .logo-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .logo-svg {
-      height: 38px;
-      fill: var(--cream);
-    }
-    
-    .logo-club {
-      font-size: 0.65rem;
-      color: var(--cream);
-      letter-spacing: 0.3em;
-      align-self: flex-end;
-      margin-top: 2px;
-    }
-    
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-    
-    .user-select {
-      background: transparent;
-      border: 2px solid var(--cream);
-      color: var(--cream);
-      padding: 0.5rem 1rem;
-      font-family: inherit;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    
-    .user-select option {
-      background: var(--black);
-      color: var(--cream);
-    }
-    
-    .stats {
-      color: var(--grey);
-      font-size: 0.9rem;
-    }
-    
-    .sync-icon {
-      display: inline-block;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    
-    .tabs {
-      display: flex;
-      gap: 0;
-      margin-top: 1rem;
-      max-width: 1200px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    .tab {
-      background: transparent;
-      border: none;
-      color: var(--grey);
-      font-family: inherit;
-      font-weight: 700;
-      font-size: 0.9rem;
-      padding: 0.75rem 1.5rem;
-      cursor: pointer;
-      position: relative;
-      transition: color 0.2s;
-    }
-    
-    .tab:hover { color: var(--cream); }
-    .tab.active { color: var(--cream); }
-    
-    .tab.active::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 1rem;
-      right: 1rem;
-      height: 3px;
-      background: var(--red);
-    }
-    
-    .tab-badge {
-      background: var(--red);
-      color: var(--cream);
-      font-size: 0.7rem;
-      padding: 0.15rem 0.5rem;
-      margin-left: 0.5rem;
-      border-radius: 10px;
-    }
-    
-    .main {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-    
-    .section-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--black);
-      margin-bottom: 1.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .controls {
-      display: flex;
-      gap: 1rem;
-      padding: 1rem 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    
-    .search-box {
-      flex: 1;
-      min-width: 200px;
-      padding: 0.75rem 1rem;
-      border: 2px solid var(--black);
-      background: var(--cream);
-      font-family: inherit;
-      font-size: 1rem;
-    }
-    
-    .search-box:focus {
-      outline: none;
-      border-color: var(--red);
-    }
-    
-    select {
-      padding: 0.75rem 1rem;
-      border: 2px solid var(--black);
-      background: var(--cream);
-      font-family: inherit;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    
-    .btn {
-      background: var(--red);
-      color: var(--cream);
-      border: none;
-      padding: 0.75rem 1.5rem;
-      font-family: inherit;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    
+    body { font-family: 'Fraunces', Georgia, serif; background: #f5f0e6; color: #1a1a1a; min-height: 100vh; }
+    .btn { background: #e63946; color: #f5f0e6; border: none; padding: 0.75rem 1.5rem; font-family: inherit; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
     .btn:hover { transform: scale(1.05); }
-    
-    .btn-outline {
-      background: transparent;
-      border: 2px solid var(--black);
-      color: var(--black);
-    }
-    
-    .btn-danger { background: #c62828; }
-    
-    .vhs-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      padding: 1rem;
-      perspective: 1000px;
-    }
-    
-    .film-card {
-      display: flex;
-      gap: 1rem;
-      padding: 1rem;
-      background: white;
-      margin-bottom: 0.5rem;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    
-    .film-card:hover { transform: translateX(5px); }
-    
-    .film-poster {
-      width: 60px;
-      height: 90px;
-      object-fit: cover;
-      background: var(--black);
-    }
-    
-    .film-poster-placeholder {
-      width: 60px;
-      height: 90px;
-      background: var(--black);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-    
-    .film-info { flex: 1; }
-    
-    .film-title {
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin-bottom: 0.25rem;
-    }
-    
-    .film-meta {
-      color: var(--grey);
-      font-size: 0.9rem;
-    }
-    
-    .hero {
-      background: var(--cream);
-      padding: 2rem;
-    }
-    
-    .hero-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      gap: 3rem;
-      align-items: flex-start;
-    }
-    
-    .hero-sticker {
-      display: inline-block;
-      background: var(--red);
-      color: var(--cream);
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      padding: 0.4rem 0.8rem;
-      transform: rotate(-3deg);
-      margin-bottom: 1rem;
-    }
-    
-    .hero-title {
-      font-size: 3rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      line-height: 0.85;
-      margin-bottom: 0.5rem;
-    }
-    
-    .hero-year {
-      font-size: 1.5rem;
-      color: var(--grey);
-      margin-bottom: 2rem;
-    }
-    
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
-    
-    .modal {
-      background: var(--cream);
-      max-width: 600px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    
-    .modal-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.5rem;
-      border-bottom: 2px solid var(--black);
-    }
-    
-    .modal-title {
-      font-weight: 700;
-      font-size: 1.2rem;
-    }
-    
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 2rem;
-      cursor: pointer;
-      line-height: 1;
-    }
-    
+    .btn-outline { background: transparent; border: 2px solid #1a1a1a; color: #1a1a1a; }
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal { background: #f5f0e6; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 2px solid #1a1a1a; }
+    .modal-close { background: none; border: none; font-size: 2rem; cursor: pointer; line-height: 1; }
     .modal-body { padding: 1.5rem; }
-    
-    .modal-actions {
-      display: flex;
-      gap: 0.75rem;
-      padding: 1.5rem;
-      border-top: 2px solid var(--black);
-      flex-wrap: wrap;
-    }
-    
-    .detail-top {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    .detail-poster {
-      width: 120px;
-      flex-shrink: 0;
-    }
-    
-    .detail-poster img {
-      width: 100%;
-      display: block;
-    }
-    
-    .detail-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      line-height: 1.1;
-      margin-bottom: 0.5rem;
-    }
-    
-    .detail-meta {
-      color: var(--grey);
-      margin-bottom: 0.75rem;
-    }
-    
-    .detail-proposer {
-      display: inline-block;
-      padding: 0.3rem 0.8rem;
-      color: white;
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
-    
-    .detail-section { margin-bottom: 1.5rem; }
-    
-    .detail-section-title {
-      font-weight: 700;
-      font-size: 0.85rem;
-      color: var(--grey);
-      margin-bottom: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .detail-text { line-height: 1.6; }
-    
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-    
-    .tag {
-      background: var(--black);
-      color: var(--cream);
-      padding: 0.25rem 0.75rem;
-      font-size: 0.85rem;
-    }
-    
-    .voters-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-    
-    .voter-chip {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.3rem 0.8rem;
-      background: rgba(0,0,0,0.1);
-      font-size: 0.9rem;
-      font-weight: 700;
-    }
-    
-    .voter-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-    
-    .links {
-      display: flex;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    .link-btn {
-      background: var(--black);
-      color: var(--cream);
-      padding: 0.5rem 1rem;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
-    
-    .search-results {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    
-    .search-result {
-      display: flex;
-      gap: 1rem;
-      padding: 0.75rem;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(0,0,0,0.1);
-    }
-    
+    .modal-actions { display: flex; gap: 0.75rem; padding: 1.5rem; border-top: 2px solid #1a1a1a; flex-wrap: wrap; }
+    .search-box { flex: 1; min-width: 200px; padding: 0.75rem 1rem; border: 2px solid #1a1a1a; background: #f5f0e6; font-family: inherit; font-size: 1rem; }
+    .search-results { max-height: 400px; overflow-y: auto; }
+    .search-result { display: flex; gap: 1rem; padding: 0.75rem; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.1); }
     .search-result:hover { background: rgba(0,0,0,0.05); }
-    
-    .search-result img {
-      width: 50px;
-      height: 75px;
-      object-fit: cover;
-    }
-    
-    .result-noimg {
-      width: 50px;
-      height: 75px;
-      background: var(--black);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--cream);
-    }
-    
-    .result-title { font-weight: 700; }
-    .result-meta { color: var(--grey); font-size: 0.9rem; }
-    
-    .suggestions { margin-top: 1.5rem; }
-    
-    .suggestions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 0.75rem;
-      margin-top: 0.75rem;
-    }
-    
-    .suggestion-card {
-      text-decoration: none;
-      color: inherit;
-    }
-    
-    .suggestion-card img {
-      width: 100%;
-      aspect-ratio: 2/3;
-      object-fit: cover;
-    }
-    
-    .suggestion-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      margin-top: 0.3rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    
-    .calendar-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    
-    .calendar-month {
-      font-weight: 700;
-      font-size: 1.1rem;
-      text-transform: capitalize;
-    }
-    
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      background: white;
-      padding: 1rem;
-    }
-    
-    .calendar-header {
-      text-align: center;
-      font-weight: 700;
-      font-size: 0.8rem;
-      color: var(--grey);
-      padding: 0.5rem;
-    }
-    
-    .calendar-day {
-      aspect-ratio: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    
-    .calendar-day:hover:not(.past) { border-color: var(--red); }
-    .calendar-day.available { background: var(--red); color: var(--cream); }
-    .calendar-day.past { opacity: 0.3; cursor: default; }
-    .calendar-day-num { font-weight: 700; }
-    .calendar-day-count { font-size: 0.7rem; opacity: 0.8; }
-    
-    .members-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 1rem;
-    }
-    
-    .member-card {
-      background: white;
-      padding: 1.5rem;
-      text-align: center;
-    }
-    
-    .member-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 1.5rem;
-      margin: 0 auto 1rem;
-    }
-    
-    .member-name {
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .member-stats {
-      color: var(--grey);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-    
-    .empty {
-      text-align: center;
-      padding: 3rem;
-      color: var(--grey);
-    }
-    
-    .empty-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-    
-    .toast {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--black);
-      color: var(--cream);
-      padding: 1rem 2rem;
-      font-weight: 700;
-      z-index: 2000;
-      animation: slideUp 0.3s ease;
-    }
-    
-    .toast.error { background: #c62828; }
-    
-    @keyframes slideUp {
-      from { transform: translateX(-50%) translateY(100px); opacity: 0; }
-      to { transform: translateX(-50%) translateY(0); opacity: 1; }
-    }
-    
-    .loading-screen {
-      position: fixed;
-      inset: 0;
-      background: var(--black);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-    
-    .loading-logo {
-      font-size: 3rem;
-      font-weight: 700;
-      color: var(--cream);
-      animation: pulse 1.5s ease infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    @media (max-width: 768px) {
-      .header-content { flex-direction: column; gap: 1rem; }
-      .tabs { flex-wrap: wrap; justify-content: center; }
-      .tab { padding: 0.5rem 1rem; font-size: 0.8rem; }
-      .hero-content { flex-direction: column; }
-      .hero-title { font-size: 2rem; }
-      .controls { flex-direction: column; }
-      .search-box { width: 100%; }
-      .detail-top { flex-direction: column; align-items: center; text-align: center; }
-    }
+    .search-result img { width: 50px; height: 75px; object-fit: cover; }
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #f5f0e6; padding: 1rem 2rem; font-weight: 700; z-index: 2000; }
+    .loading-screen { position: fixed; inset: 0; background: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+    .loading-logo { font-size: 3rem; font-weight: 700; color: #f5f0e6; animation: pulse 1.5s ease infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .sync-icon { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -678,6 +38,579 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script type="text/babel" src="app.js"></script>
+  <script type="text/babel">
+// ==========================================
+// VIDEODROME — Ciné-Club Série B
+// ==========================================
+
+const TMDB_KEY = '2dca580c2a14b55200e784d157207b4d';
+const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
+
+// ⚠️ REMPLACE PAR TON URL GOOGLE APPS SCRIPT
+const SHEETS_API = 'COLLE_TON_URL_ICI';
+
+const COLORS = {
+  cream: '#f5f0e6',
+  red: '#e63946',
+  black: '#1a1a1a',
+  grey: '#888',
+};
+
+const MEMBERS = {
+  seb: { color: '#e63946', name: 'Seb', initial: 'S' },
+  bernard: { color: '#f4a261', name: 'Bernard', initial: 'Bd' },
+  gary: { color: '#e9c46a', name: 'Gary', initial: 'G' },
+  benoit: { color: '#2a9d8f', name: 'Benoit', initial: 'Bt' },
+  arnaud: { color: '#457b9d', name: 'Arnaud', initial: 'A' },
+};
+
+const getMember = (id) => MEMBERS[id] || { color: '#888', name: id, initial: '?' };
+const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+// Bord dentelé
+const TornEdge = ({ color = COLORS.cream, height = 8 }) => (
+  <svg width="100%" height={height} style={{ display: 'block' }}>
+    <defs>
+      <pattern id={`teeth-${color.replace('#', '')}`} x="0" y="0" width="16" height={height} patternUnits="userSpaceOnUse">
+        <polygon points={`0,0 8,${height} 16,0`} fill={color} />
+      </pattern>
+    </defs>
+    <rect width="100%" height={height} fill={`url(#teeth-${color.replace('#', '')})`} />
+  </svg>
+);
+
+// Logo SVG
+const LogoSVG = () => (
+  <svg viewBox="0 0 771 92" style={{ height: 38, fill: COLORS.cream }}>
+    <path d="M56.8 1.8L28.9 90.2H0L40.5 1.8h16.3zm12.3 0L40.5 90.2h28.6l14-44.6L97.5 90.2h28.6L84.4 1.8H69.1zm77.4 0L119 90.2h50l7.2-23h-21.5l21-65.4h-29.2zm65.5 0L188.1 90.2h50.1l7.2-23h-21.6l21-65.4h-29.2zm70.3 0l-23.9 88.4h50.1l7.2-23H294l21-65.4h-29.2zm57.9 0l-24.2 88.4h71.6l7.2-23h-42.8l4.8-15.2h35.6l6.3-20.5h-35.6l4.2-13.4h40.3l7.3-16.3h-68.7zm-90.6 0L225.7 90.2h29.1l6-19.4h.3c4.5 7.2 11.2 10.7 20 10.7 18.9 0 33.2-15.9 38.9-36.9 5.4-19.8-2.5-34.5-21.7-34.5-9.7 0-18 4.8-22.8 12.3h-.3l3.5-12.6h-29zm42.5 23.1c6.4 0 10 4.7 8.3 11-1.8 6.6-7.4 11.5-14 11.5-6.5 0-10-4.8-8.3-11.2 1.7-6.4 7.5-11.3 14-11.3zm97.6-23.1l-23.9 88.4h29.1l7.5-27.4h10.2c23.9 0 40.2-12.2 45-29.9 5.1-18.8-6.7-31.1-30.6-31.1h-37.3zm30.9 20c5.9 0 9.4 2.8 8 8-1.4 5-5.9 8.1-11.8 8.1h-8.8l4.2-16.1h8.4zm76.5-20l-22 88.4h68.5l5-20.2h-39.4l4.3-17.2h32.3l5-20h-32.3l3.3-13.5h37.2l5.2-17.5h-66.1zm101.5 0l-24.2 88.4h50l7.2-23h-21.6l21-65.4h-29.2zm72.9 0l-21.2 88.4h29.1l9-37.1 21.1 37.1h34l-30.2-44.7 45.7-43.7h-35.7l-29.3 32.4h-.3l7.9-32.4h-30.1z"/>
+  </svg>
+);
+
+// Toast
+const Toast = ({ message, onClose }) => {
+  React.useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, []);
+  return <div className="toast">{message}</div>;
+};
+
+// Poster VHS générique
+const VHSPoster = ({ title }) => (
+  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(to bottom, #1a0a2e 0%, #d4145a 50%, #fbb03b 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+    <div style={{ width: 70, height: 70, borderRadius: '50%', background: '#fbb03b', marginBottom: 50, boxShadow: '0 0 40px #fbb03b' }}></div>
+    <div style={{ position: 'absolute', bottom: 50, width: '100%', height: 70, background: '#000', clipPath: 'polygon(20% 100%, 30% 60%, 40% 80%, 50% 40%, 60% 70%, 70% 50%, 80% 100%)' }}></div>
+    <div style={{ position: 'absolute', bottom: 15, fontFamily: 'Impact, sans-serif', fontSize: '1rem', color: '#fbb03b', textTransform: 'uppercase', textShadow: '1px 1px 0 #000' }}>{title}</div>
+  </div>
+);
+
+// Cassette VHS qui sort
+const VHSTape = ({ title }) => (
+  <div style={{ width: '100%', height: '100%', background: '#1a1a1a', borderRadius: 4, display: 'flex', flexDirection: 'column', padding: '5%', position: 'relative', boxSizing: 'border-box' }}>
+    <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(90deg, transparent 0px, transparent 3px, rgba(0,0,0,0.4) 3px, rgba(0,0,0,0.4) 4px), linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.4) 3px, rgba(0,0,0,0.4) 4px)', backgroundSize: '5px 5px', borderRadius: 4, pointerEvents: 'none', zIndex: 1 }}></div>
+    <div style={{ position: 'absolute', top: 0, right: 0, width: 2, height: '100%', background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0.15), rgba(255,255,255,0.3))', borderRadius: '0 4px 4px 0', zIndex: 10 }}></div>
+    {/* Bobine haute noire */}
+    <div style={{ width: '65%', aspectRatio: '1', borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #3a3a3a 0%, #222 30%, #1a1a1a 60%, #333 85%, #222 100%)', border: '3px solid #2a2a2a', margin: '0 auto', boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.8)', position: 'relative', zIndex: 2, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '40%', aspectRatio: '1', borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #555 0%, #333 100%)', border: '2px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '35%', aspectRatio: '1', borderRadius: '50%', background: '#1a1a1a' }}></div>
+      </div>
+    </div>
+    {/* Étiquette */}
+    <div style={{ flex: 1, background: '#f5f5f0', borderRadius: 3, margin: '8% 5%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.4)', position: 'relative', zIndex: 2, overflow: 'hidden' }}>
+      <div style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)', fontSize: '0.6rem', fontWeight: 700, color: '#222', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '10px 0', textAlign: 'center' }}>{title}</div>
+    </div>
+    {/* Bobine basse blanche */}
+    <div style={{ width: '65%', aspectRatio: '1', borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #ffffff 0%, #f0f0f0 30%, #ddd 60%, #eee 85%, #e0e0e0 100%)', border: '3px solid #ccc', margin: '0 auto', boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.15)', position: 'relative', zIndex: 2, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '40%', aspectRatio: '1', borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #f5f5f5 0%, #ddd 100%)', border: '2px solid #bbb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '35%', aspectRatio: '1', borderRadius: '50%', background: '#ccc' }}></div>
+      </div>
+    </div>
+  </div>
+);
+
+// Sticker étoile 12 branches
+const generateStarPath = (cx, cy, outerR, innerR, points) => {
+  let path = '';
+  for (let i = 0; i < points * 2; i++) {
+    const angle = (i * Math.PI) / points - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    path += (i === 0 ? 'M' : 'L') + x + ',' + y;
+  }
+  return path + 'Z';
+};
+
+const STICKER_POS = [
+  { top: '12%', right: '6%', rot: -15 },
+  { top: '38%', right: '4%', rot: 10 },
+  { top: '60%', right: '8%', rot: -8 },
+  { top: '25%', right: '12%', rot: 18 },
+  { top: '50%', right: '2%', rot: -20 },
+];
+
+const VoteSticker = ({ memberId, index }) => {
+  const m = getMember(memberId);
+  const p = STICKER_POS[index % STICKER_POS.length];
+  const rot = p.rot + (index * 13) % 25 - 12;
+  const star = generateStarPath(20, 20, 20, 15, 12);
+  return (
+    <div style={{ position: 'absolute', top: p.top, right: p.right, transform: `rotate(${rot}deg)`, zIndex: 20 + index, pointerEvents: 'none' }}>
+      <svg width="40" height="40" viewBox="0 0 40 40" style={{ filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.4))' }}>
+        <path d={star} fill={m.color} />
+        <text x="20" y="20" textAnchor="middle" dominantBaseline="central" style={{ fontSize: m.initial.length > 1 ? 9 : 12, fontWeight: 800, fill: '#fff' }}>{m.initial}</text>
+      </svg>
+    </div>
+  );
+};
+
+// VHS Card avec cassette qui sort
+const VHSCard = ({ film, index, onClick, onFav, user }) => {
+  const [isActive, setIsActive] = React.useState(false);
+  const [isAnimating, setIsAnimating] = React.useState(false);
+  const boxWidth = 175, boxHeight = 260, tapeWidth = 90;
+  const baseRotateY = index % 2 === 0 ? -15 : 15;
+  const member = getMember(film.proposedBy);
+  const isFav = film.favorites?.includes(user);
+  
+  const handleEnter = () => { setIsActive(true); setIsAnimating(true); };
+  const handleLeave = () => { setIsActive(false); setTimeout(() => setIsAnimating(false), 450); };
+  const getZ = () => isActive ? 200 : (isAnimating ? 100 : 1);
+  
+  return (
+    <div style={{ width: boxWidth, height: boxHeight + 50, cursor: 'pointer', marginTop: index % 2 === 1 ? 20 : 0, position: 'relative', zIndex: getZ(), perspective: 1000 }} onMouseEnter={handleEnter} onMouseLeave={handleLeave} onClick={onClick}>
+      <div style={{ position: 'relative', width: boxWidth, height: boxHeight, transform: isActive ? 'rotateY(0deg) rotateX(0deg) scale(1.15)' : `rotateY(${baseRotateY}deg) rotateX(5deg)`, transition: 'transform 0.4s ease', transformStyle: 'preserve-3d' }}>
+        {/* Cassette qui sort */}
+        <div style={{ position: 'absolute', top: 0, right: isActive ? -(tapeWidth * 0.625) : -15, width: tapeWidth, height: boxHeight, transition: 'right 0.4s ease', zIndex: -1, pointerEvents: 'none' }}>
+          <VHSTape title={film.title} />
+        </div>
+        {/* Bordures 3D */}
+        <div style={{ position: 'absolute', top: 0, left: -4, width: 4, height: '100%', background: `linear-gradient(to bottom, ${COLORS.cream}, #444)` }}></div>
+        <div style={{ position: 'absolute', top: -2, left: -4, width: 'calc(100% + 4px)', height: 2, background: `linear-gradient(to right, ${COLORS.cream}, #444)` }}></div>
+        <div style={{ position: 'absolute', bottom: -4, left: -4, width: 'calc(100% + 4px)', height: 4, background: '#333' }}></div>
+        {/* Boîtier */}
+        <div style={{ position: 'absolute', width: '100%', height: '100%', background: '#000', boxShadow: isActive ? '0 25px 50px rgba(0,0,0,0.5)' : '10px 10px 25px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+          {/* Bande couleur */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 6, height: '100%', background: member.color, zIndex: 10 }}></div>
+          {/* Stickers votes */}
+          {film.votes?.map((v, i) => <VoteSticker key={v} memberId={v} index={i} />)}
+          {/* Poster */}
+          {film.poster ? <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <VHSPoster title={film.title} />}
+          {/* Bouton favori */}
+          <button onClick={(e) => { e.stopPropagation(); onFav(); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 32, height: 32, fontSize: '1rem', cursor: 'pointer', zIndex: 30 }}>{isFav ? '❤️' : '🤍'}</button>
+          {/* Titre */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', padding: '3rem 0.75rem 0.75rem', zIndex: 20 }}>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', textShadow: '1px 1px 0 #000' }}>{film.title}</div>
+            <div style={{ color: '#aaa', fontSize: '0.8rem' }}>{film.year}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// VHS Placeholder avec ?
+const VHSPlaceholder = ({ index, onClick }) => {
+  const [isActive, setIsActive] = React.useState(false);
+  const boxWidth = 175, boxHeight = 260;
+  const baseRotateY = index % 2 === 0 ? -15 : 15;
+  
+  return (
+    <div style={{ width: boxWidth, height: boxHeight + 50, cursor: 'pointer', marginTop: index % 2 === 1 ? 20 : 0, opacity: 0.5, perspective: 1000 }} onMouseEnter={() => setIsActive(true)} onMouseLeave={() => setIsActive(false)} onClick={onClick}>
+      <div style={{ position: 'relative', width: boxWidth, height: boxHeight, transform: isActive ? 'rotateY(0deg) rotateX(0deg) scale(1.05)' : `rotateY(${baseRotateY}deg) rotateX(5deg)`, transition: 'transform 0.4s ease', transformStyle: 'preserve-3d' }}>
+        <div style={{ position: 'absolute', top: 0, left: -4, width: 4, height: '100%', background: 'linear-gradient(to bottom, #888, #333)' }}></div>
+        <div style={{ position: 'absolute', top: -2, left: -4, width: 'calc(100% + 4px)', height: 2, background: 'linear-gradient(to right, #888, #333)' }}></div>
+        <div style={{ position: 'absolute', bottom: -4, left: -4, width: 'calc(100% + 4px)', height: 4, background: '#222' }}></div>
+        <div style={{ position: 'absolute', width: '100%', height: '100%', background: '#1a1a1a', boxShadow: '8px 8px 20px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 6, height: '100%', background: '#444', zIndex: 10 }}></div>
+          <div style={{ fontSize: '5rem', color: '#333', fontWeight: 700 }}>?</div>
+          <div style={{ position: 'absolute', top: '20%', left: '10%', right: '10%', height: 2, background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
+          <div style={{ position: 'absolute', top: '35%', left: '15%', right: '15%', height: 2, background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', padding: '3rem 0.75rem 0.75rem', zIndex: 20 }}>
+            <div style={{ color: '#555', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>+ Proposer un film</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// App principale
+const App = () => {
+  const [user, setUser] = React.useState(() => localStorage.getItem('vd_user') || 'seb');
+  const [tab, setTab] = React.useState('propositions');
+  const [films, setFilms] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_films')) || []; } catch { return []; } });
+  const [avail, setAvail] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_avail')) || {}; } catch { return {}; } });
+  const [search, setSearch] = React.useState('');
+  const [sort, setSort] = React.useState('votes');
+  const [selected, setSelected] = React.useState(null);
+  const [showAdd, setShowAdd] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [syncing, setSyncing] = React.useState(false);
+  const [toast, setToast] = React.useState(null);
+
+  React.useEffect(() => { localStorage.setItem('vd_user', user); }, [user]);
+  React.useEffect(() => { localStorage.setItem('vd_films', JSON.stringify(films)); }, [films]);
+  React.useEffect(() => { localStorage.setItem('vd_avail', JSON.stringify(avail)); }, [avail]);
+  React.useEffect(() => { loadData(); }, []);
+
+  const loadData = async () => {
+    if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') { setLoading(false); return; }
+    setSyncing(true);
+    try {
+      const res = await fetch(SHEETS_API);
+      const data = await res.json();
+      if (data.films) setFilms(data.films.map(f => ({ ...f, id: parseInt(f.id) || f.id, year: parseInt(f.year) || 0, votes: f.votes ? (typeof f.votes === 'string' ? JSON.parse(f.votes) : f.votes) : [], favorites: f.favorites ? (typeof f.favorites === 'string' ? JSON.parse(f.favorites) : f.favorites) : [] })));
+      if (data.availabilities) setAvail(data.availabilities);
+      notify('Données synchronisées');
+    } catch(e) { console.error(e); }
+    setSyncing(false);
+    setLoading(false);
+  };
+
+  const save = async (f, a) => {
+    if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') return;
+    setSyncing(true);
+    try { await fetch(SHEETS_API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ films: f || films, availabilities: a || avail }) }); } catch(e) { console.error(e); }
+    setSyncing(false);
+  };
+
+  const scheduled = films.find(f => f.status === 'scheduled');
+  const proposed = films.filter(f => f.status === 'proposed');
+  const watched = films.filter(f => f.status === 'watched').sort((a, b) => new Date(b.watchedDate) - new Date(a.watchedDate));
+
+  const filtered = React.useMemo(() => {
+    let r = [...proposed];
+    if (search) { const q = search.toLowerCase(); r = r.filter(f => f.title?.toLowerCase().includes(q) || f.director?.toLowerCase().includes(q)); }
+    switch(sort) {
+      case 'favorites': return r.sort((a, b) => (b.favorites?.length || 0) - (a.favorites?.length || 0));
+      case 'votes': return r.sort((a, b) => (b.votes?.length || 0) - (a.votes?.length || 0));
+      case 'recent': return r.sort((a, b) => b.id - a.id);
+      case 'year': return r.sort((a, b) => b.year - a.year);
+      case 'alpha': return r.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'fr'));
+      default: return r;
+    }
+  }, [proposed, search, sort]);
+
+  const topVotes = [...proposed].sort((a, b) => (b.votes?.length || 0) - (a.votes?.length || 0)).slice(0, 3);
+  const notify = (msg) => setToast(msg);
+
+  const add = (film) => {
+    const nf = { ...film, id: Date.now(), proposedBy: user, proposedDate: new Date().toISOString(), status: 'proposed', votes: [], favorites: [] };
+    const newFilms = [nf, ...films];
+    setFilms(newFilms); save(newFilms); setShowAdd(false);
+    notify(`"${film.title}" ajouté`);
+  };
+
+  const vote = (id) => {
+    const newFilms = films.map(f => f.id !== id ? f : { ...f, votes: (f.votes || []).includes(user) ? f.votes.filter(v => v !== user) : [...(f.votes || []), user] });
+    setFilms(newFilms); save(newFilms);
+    if (selected?.id === id) setSelected(newFilms.find(f => f.id === id));
+  };
+
+  const fav = (id) => {
+    const newFilms = films.map(f => f.id !== id ? f : { ...f, favorites: (f.favorites || []).includes(user) ? f.favorites.filter(v => v !== user) : [...(f.favorites || []), user] });
+    setFilms(newFilms); save(newFilms);
+    if (selected?.id === id) setSelected(newFilms.find(f => f.id === id));
+  };
+
+  const schedule = (id) => {
+    const newFilms = films.map(f => ({ ...f, status: f.id === id ? 'scheduled' : (f.status === 'scheduled' ? 'proposed' : f.status) }));
+    setFilms(newFilms); save(newFilms); setSelected(null);
+    notify('Film programmé !');
+  };
+
+  const unschedule = (id) => {
+    const newFilms = films.map(f => f.id === id ? { ...f, status: 'proposed' } : f);
+    setFilms(newFilms); save(newFilms); setSelected(null);
+    notify('Film déprogrammé');
+  };
+
+  const markWatched = (id, date) => {
+    const newFilms = films.map(f => f.id === id ? { ...f, status: 'watched', watchedDate: date || new Date().toISOString() } : f);
+    setFilms(newFilms); save(newFilms); setSelected(null);
+    notify('Film vu !');
+  };
+
+  const del = (id) => {
+    if (!confirm('Supprimer ce film ?')) return;
+    const newFilms = films.filter(f => f.id !== id);
+    setFilms(newFilms); save(newFilms); setSelected(null);
+    notify('Film supprimé');
+  };
+
+  const toggleAvail = (date) => {
+    const k = date.toISOString().split('T')[0];
+    const cur = avail[k] || [];
+    const newAvail = { ...avail, [k]: cur.includes(user) ? cur.filter(u => u !== user) : [...cur, user] };
+    setAvail(newAvail); save(null, newAvail);
+  };
+
+  if (loading) return <div className="loading-screen"><div className="loading-logo">VIDEODROME</div></div>;
+
+  const membersList = Object.entries(MEMBERS);
+  const placeholdersCount = Math.max(0, 6 - filtered.length);
+
+  return (
+    <div>
+      {/* Header */}
+      <header style={{ background: COLORS.black, padding: '1.5rem 2rem', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: 2, height: 38, width: '3.8rem' }}>
+              {membersList.map(([k, m]) => <div key={k} style={{ flex: 1, height: '100%', background: m.color }}></div>)}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <LogoSVG />
+              <span style={{ fontSize: '0.65rem', color: COLORS.cream, letterSpacing: '0.3em', alignSelf: 'flex-end', marginTop: 2 }}>CLUB</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <select value={user} onChange={e => setUser(e.target.value)} style={{ background: 'transparent', border: `2px solid ${COLORS.cream}`, color: COLORS.cream, padding: '0.5rem 1rem', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer' }}>
+              {membersList.map(([k, m]) => <option key={k} value={k} style={{ background: COLORS.black }}>{m.name}</option>)}
+            </select>
+            <div style={{ color: COLORS.grey, fontSize: '0.9rem' }}>{proposed.length} films · {watched.length} vus{syncing && <span className="sync-icon"> ⟳</span>}</div>
+          </div>
+        </div>
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 0, marginTop: '1rem', maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto' }}>
+          {[['propositions', 'Propositions', proposed.length], ['planning', 'Planning', 0], ['historique', 'Historique', watched.length], ['membres', 'Membres', 0]].map(([k, label, count]) => (
+            <button key={k} onClick={() => setTab(k)} style={{ background: 'transparent', border: 'none', color: tab === k ? COLORS.cream : COLORS.grey, fontFamily: 'inherit', fontWeight: 700, fontSize: '0.9rem', padding: '0.75rem 1.5rem', cursor: 'pointer', position: 'relative' }}>
+              {label}{count > 0 && <span style={{ background: COLORS.red, color: COLORS.cream, fontSize: '0.7rem', padding: '0.15rem 0.5rem', marginLeft: '0.5rem', borderRadius: 10 }}>{count}</span>}
+              {tab === k && <div style={{ position: 'absolute', bottom: 0, left: '1rem', right: '1rem', height: 3, background: COLORS.red }}></div>}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {tab === 'propositions' && (
+        <>
+          {/* Hero - Prochaine séance */}
+          <section style={{ background: COLORS.cream, padding: '2rem' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+              <div style={{ width: 140, height: 210, background: '#000', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: scheduled ? 'pointer' : 'default' }} onClick={() => scheduled && setSelected(scheduled)}>
+                {scheduled ? (
+                  scheduled.poster ? <img src={scheduled.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <VHSPoster title={scheduled.title} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                    <div style={{ fontSize: '4rem', opacity: 0.3, color: '#fff' }}>?</div>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, background: `repeating-linear-gradient(90deg, ${COLORS.red} 0px, ${COLORS.red} 8px, transparent 8px, transparent 16px)` }}></div>
+                  </div>
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'inline-block', background: COLORS.red, color: COLORS.cream, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', padding: '0.4rem 0.8rem', transform: 'rotate(-3deg)', marginBottom: '1rem' }}>PROCHAINE SÉANCE</div>
+                {scheduled ? (
+                  <>
+                    <h1 style={{ fontSize: '2.5rem', fontWeight: 700, textTransform: 'uppercase', lineHeight: 0.85, marginBottom: '0.5rem' }}>{scheduled.title}</h1>
+                    <div style={{ fontSize: '1.3rem', color: COLORS.grey, marginBottom: '1.5rem' }}>{scheduled.year} · {scheduled.director}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ width: 12, height: 12, borderRadius: '50%', background: getMember(scheduled.proposedBy).color }}></span><span style={{ fontWeight: 700 }}>Proposé par {getMember(scheduled.proposedBy).name}</span></div>
+                  </>
+                ) : (
+                  <>
+                    <h1 style={{ fontSize: '2.5rem', fontWeight: 700, textTransform: 'uppercase', lineHeight: 0.85, marginBottom: '0.5rem', opacity: 0.3 }}>EN ATTENTE</h1>
+                    <div style={{ fontSize: '1.3rem', color: COLORS.grey, marginBottom: '1.5rem', opacity: 0.5 }}>Aucun film programmé</div>
+                    <div style={{ opacity: 0.5, fontStyle: 'italic' }}>Programmez un film depuis les propositions</div>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Section Top Votes */}
+          <section style={{ background: COLORS.red, padding: '2rem 2rem 3rem', position: 'relative', zIndex: 20, overflow: 'visible' }}>
+            <TornEdge color={COLORS.cream} height={8} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0 }}><TornEdge color={COLORS.cream} height={8} /></div>
+            <div style={{ maxWidth: 1200, margin: '0 auto', paddingTop: '1rem' }}>
+              <h2 style={{ color: COLORS.cream, fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Top votes</h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
+                {topVotes.length > 0 ? topVotes.map((f, i) => <VHSCard key={f.id} film={f} index={i} onClick={() => setSelected(f)} onFav={() => fav(f.id)} user={user} />) : [...Array(3)].map((_, i) => <VHSPlaceholder key={i} index={i} onClick={() => setShowAdd(true)} />)}
+              </div>
+            </div>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, transform: 'scaleY(-1)' }}><TornEdge color={COLORS.cream} height={8} /></div>
+          </section>
+
+          {/* Section Propositions */}
+          <section style={{ background: COLORS.cream, padding: '2rem', position: 'relative', zIndex: 30 }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <input className="search-box" placeholder="Rechercher un film..." value={search} onChange={e => setSearch(e.target.value)} />
+                <select value={sort} onChange={e => setSort(e.target.value)} style={{ padding: '0.75rem 1rem', border: `2px solid ${COLORS.black}`, background: COLORS.cream, fontFamily: 'inherit', fontWeight: 700 }}>
+                  <option value="votes">▲ Votes</option>
+                  <option value="favorites">♥ Favoris</option>
+                  <option value="recent">Récents</option>
+                  <option value="year">Année</option>
+                  <option value="alpha">A → Z</option>
+                </select>
+                <button className="btn" onClick={() => setShowAdd(true)}>+ Proposer</button>
+              </div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Propositions ({filtered.length})</h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
+                {filtered.map((f, i) => <VHSCard key={f.id} film={f} index={i} onClick={() => setSelected(f)} onFav={() => fav(f.id)} user={user} />)}
+                {[...Array(placeholdersCount)].map((_, i) => <VHSPlaceholder key={`p-${i}`} index={filtered.length + i} onClick={() => setShowAdd(true)} />)}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      {tab === 'planning' && <Planning avail={avail} user={user} onToggle={toggleAvail} />}
+      {tab === 'historique' && <Historique watched={watched} onSelect={setSelected} />}
+      {tab === 'membres' && <MembresTab films={films} />}
+
+      {showAdd && <AddModal onClose={() => setShowAdd(false)} onAdd={add} />}
+      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onVote={() => vote(selected.id)} onFav={() => fav(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} />}
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+    </div>
+  );
+};
+
+// Planning
+const Planning = ({ avail, user, onToggle }) => {
+  const [month, setMonth] = React.useState(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1); });
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dim = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const first = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const offset = first === 0 ? 6 : first - 1;
+  const days = [...Array(offset).fill(null), ...Array.from({length: dim}, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))];
+  const mName = month.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const best = Object.entries(avail).filter(([d]) => new Date(d) >= today).map(([d, u]) => ({ d, u, c: u.length })).sort((a, b) => b.c - a.c).slice(0, 5);
+
+  return (
+    <section style={{ background: COLORS.cream, padding: '2rem' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Tes disponibilités</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>←</button>
+          <div style={{ fontWeight: 700, fontSize: '1.1rem', textTransform: 'capitalize' }}>{mName}</div>
+          <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>→</button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, background: 'white', padding: '1rem' }}>
+          {['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d => <div key={d} style={{ textAlign: 'center', fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, padding: '0.5rem' }}>{d}</div>)}
+          {days.map((date, i) => { if (!date) return <div key={`e${i}`} />; const k = date.toISOString().split('T')[0]; const members = avail[k] || []; const isA = members.includes(user); const past = date < today; return <div key={k} onClick={() => !past && onToggle(date)} style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: past ? 'default' : 'pointer', border: '2px solid transparent', background: isA ? COLORS.red : 'transparent', color: isA ? COLORS.cream : COLORS.black, opacity: past ? 0.3 : 1 }}><div style={{ fontWeight: 700 }}>{date.getDate()}</div>{members.length > 0 && <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{members.length}</div>}</div>; })}
+        </div>
+        <div style={{ marginTop: '2rem' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Meilleures dates</h3>
+          {best.length > 0 ? best.map(({ d, u }) => (
+            <div key={d} style={{ display: 'flex', gap: '1rem', padding: '0.75rem', background: 'white', marginBottom: '0.5rem', alignItems: 'center' }}>
+              <div style={{ fontWeight: 700, minWidth: 120 }}>{formatDate(d)}</div>
+              <div style={{ flex: 1, display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>{u.map(x => <span key={x} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.2rem 0.5rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.85rem' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: getMember(x).color }}></span>{getMember(x).name}</span>)}</div>
+              <div style={{ fontWeight: 700, color: COLORS.red }}>{u.length}/5</div>
+            </div>
+          )) : <div style={{ color: COLORS.grey }}>Pas encore de disponibilités</div>}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Historique
+const Historique = ({ watched, onSelect }) => (
+  <section style={{ background: COLORS.cream, padding: '2rem' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Films vus ({watched.length})</h2>
+      {watched.length > 0 ? watched.map(f => (
+        <div key={f.id} onClick={() => onSelect(f)} style={{ display: 'flex', gap: '1rem', padding: '1rem', background: 'white', marginBottom: '0.5rem', cursor: 'pointer' }}>
+          {f.poster ? <img src={f.poster} alt="" style={{ width: 60, height: 90, objectFit: 'cover' }} /> : <div style={{ width: 60, height: 90, background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>📼</div>}
+          <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{f.title}</div><div style={{ color: COLORS.grey }}>{f.year} · {f.director}</div><div style={{ color: COLORS.grey }}>Proposé par {getMember(f.proposedBy).name}</div></div>
+          <div style={{ color: COLORS.grey }}>{formatDate(f.watchedDate)}</div>
+        </div>
+      )) : <div style={{ textAlign: 'center', padding: '3rem', color: COLORS.grey }}><div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎬</div>Aucun film vu</div>}
+    </div>
+  </section>
+);
+
+// Membres
+const MembresTab = ({ films }) => {
+  const membersList = Object.entries(MEMBERS);
+  const stats = (id) => ({ prop: films.filter(f => f.proposedBy === id).length, watched: films.filter(f => f.proposedBy === id && f.status === 'watched').length, favs: films.filter(f => f.proposedBy === id).reduce((a, f) => a + (f.favorites?.length || 0), 0) });
+  const watched = films.filter(f => f.status === 'watched');
+  const bestP = membersList.map(([k, m]) => ({ ...m, id: k, w: watched.filter(f => f.proposedBy === k).length })).sort((a, b) => b.w - a.w)[0];
+  const mostActive = membersList.map(([k, m]) => ({ ...m, id: k, v: films.filter(f => f.votes?.includes(k)).length })).sort((a, b) => b.v - a.v)[0];
+
+  return (
+    <section style={{ background: COLORS.cream, padding: '2rem' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Statistiques</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+          {membersList.map(([k, m]) => { const s = stats(k); return (
+            <div key={k} style={{ background: 'white', padding: '1.5rem', textAlign: 'center' }}>
+              <div style={{ width: 60, height: 60, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.5rem', margin: '0 auto 1rem', background: m.color }}>{m.name[0]}</div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem' }}>{m.name}</div>
+              <div style={{ color: COLORS.grey, fontSize: '0.9rem', lineHeight: 1.6 }}>{s.prop} proposé{s.prop > 1 ? 's' : ''}<br/>{s.watched} vu{s.watched > 1 ? 's' : ''}<br/>{s.favs} ♥ reçus</div>
+            </div>
+          ); })}
+        </div>
+        <div style={{ marginTop: '2rem' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Hall of Fame</h3>
+          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+            <div style={{ background: 'white', padding: '1.5rem', textAlign: 'center' }}><div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🎬</div><div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Meilleur goût</div><div style={{ color: COLORS.grey }}>{bestP?.w > 0 ? <><span style={{ color: bestP.color }}>{bestP.name}</span><br/>{bestP.w} film{bestP.w > 1 ? 's' : ''} vu{bestP.w > 1 ? 's' : ''}</> : '—'}</div></div>
+            <div style={{ background: 'white', padding: '1.5rem', textAlign: 'center' }}><div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⚡</div><div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Plus actif</div><div style={{ color: COLORS.grey }}>{mostActive?.v > 0 ? <><span style={{ color: mostActive.color }}>{mostActive.name}</span><br/>{mostActive.v} vote{mostActive.v > 1 ? 's' : ''}</> : '—'}</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Modal détails
+const DetailModal = ({ film, user, onClose, onVote, onFav, onSchedule, onUnschedule, onWatched, onDelete }) => {
+  const voted = film.votes?.includes(user);
+  const faved = film.favorites?.includes(user);
+  const isProposer = film.proposedBy === user;
+  const p = getMember(film.proposedBy);
+  const [showDate, setShowDate] = React.useState(false);
+  const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head"><div style={{ fontWeight: 700, fontSize: '1.2rem' }}>Détails</div><button className="modal-close" onClick={onClose}>×</button></div>
+        <div className="modal-body">
+          <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ width: 120, flexShrink: 0 }}>{film.poster ? <img src={film.poster} alt="" style={{ width: '100%' }} /> : <div style={{ width: '100%', aspectRatio: '2/3', background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>📼</div>}</div>
+            <div><div style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: 1.1, marginBottom: '0.5rem' }}>{film.title}</div><div style={{ color: COLORS.grey, marginBottom: '0.75rem' }}>{film.year} · {film.director}{film.runtime ? ` · ${film.runtime} min` : ''}</div><div style={{ display: 'inline-block', padding: '0.3rem 0.8rem', color: 'white', fontWeight: 700, fontSize: '0.85rem', background: p.color }}>Proposé par {p.name}</div></div>
+          </div>
+          {film.overview && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Synopsis</div><div style={{ lineHeight: 1.6 }}>{film.overview}</div></div>}
+          {film.genres && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Genres</div><div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>{film.genres.split(',').map((g, i) => <span key={i} style={{ background: COLORS.black, color: COLORS.cream, padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>{g.trim()}</span>)}</div></div>}
+          {film.actors && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Casting</div><div style={{ lineHeight: 1.6 }}>{film.actors}</div></div>}
+          {film.status !== 'watched' && (
+            <>
+              <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>♥ Favoris ({film.favorites?.length || 0})</div>{film.favorites?.length > 0 ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>{film.favorites.map(v => <span key={v} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.3rem 0.8rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.9rem' }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(v).color }}></span>{getMember(v).name}</span>)}</div> : <div style={{ color: COLORS.grey }}>—</div>}</div>
+              <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>▲ Votes ({film.votes?.length || 0})</div>{film.votes?.length > 0 ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>{film.votes.map(v => <span key={v} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.3rem 0.8rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.9rem' }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(v).color }}></span>{getMember(v).name}</span>)}</div> : <div style={{ color: COLORS.grey }}>—</div>}</div>
+            </>
+          )}
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>{film.tmdbId && <a href={`https://www.themoviedb.org/movie/${film.tmdbId}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>TMDB</a>}<a href={`https://www.imdb.com/find/?q=${encodeURIComponent(film.title + ' ' + film.year)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>IMDb</a><a href={`https://www.justwatch.com/fr/recherche?q=${encodeURIComponent(film.title)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>JustWatch</a></div>
+          {showDate && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Date de visionnage</div><div style={{ display: 'flex', gap: '0.5rem' }}><input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: '0.5rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit' }} /><button className="btn" onClick={() => onWatched(date)}>Valider</button></div></div>}
+        </div>
+        <div className="modal-actions">
+          {film.status === 'proposed' && <><button className={`btn ${faved ? '' : 'btn-outline'}`} onClick={onFav}>{faved ? '♥ Favori' : '♡ Favori'}</button><button className={`btn ${voted ? '' : 'btn-outline'}`} onClick={onVote}>{voted ? '✓ Voté' : '▲ Voter'}</button><button className="btn" onClick={onSchedule}>Programmer</button></>}
+          {film.status === 'scheduled' && <><button className="btn btn-outline" onClick={onUnschedule}>Déprogrammer</button><button className="btn" onClick={() => setShowDate(true)}>Marquer vu</button></>}
+          {(isProposer || film.status === 'watched') && <button className="btn" style={{ background: '#c62828' }} onClick={onDelete}>Supprimer</button>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modal ajout
+const AddModal = ({ onClose, onAdd }) => {
+  const [q, setQ] = React.useState('');
+  const [results, setResults] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const search = async () => { if (!q.trim()) return; setLoading(true); try { const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&language=fr-FR&query=${encodeURIComponent(q)}`); const data = await res.json(); setResults(data.results?.slice(0, 10) || []); } catch(e) { console.error(e); } setLoading(false); };
+  const select = async (r) => { try { const [det, cred] = await Promise.all([fetch(`https://api.themoviedb.org/3/movie/${r.id}?api_key=${TMDB_KEY}&language=fr-FR`).then(x => x.json()), fetch(`https://api.themoviedb.org/3/movie/${r.id}/credits?api_key=${TMDB_KEY}`).then(x => x.json())]); onAdd({ tmdbId: r.id, title: det.title, year: det.release_date?.split('-')[0] || '', poster: det.poster_path ? TMDB_IMG + det.poster_path : null, director: cred.crew?.find(c => c.job === 'Director')?.name || '', actors: cred.cast?.slice(0, 4).map(a => a.name).join(', ') || '', genres: det.genres?.map(g => g.name).join(', ') || '', overview: det.overview || '', runtime: det.runtime || 0 }); } catch(e) { console.error(e); } };
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head"><div style={{ fontWeight: 700, fontSize: '1.2rem' }}>Proposer un film</div><button className="modal-close" onClick={onClose}>×</button></div>
+        <div className="modal-body">
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}><input className="search-box" placeholder="Titre du film..." value={q} onChange={e => setQ(e.target.value)} onKeyPress={e => e.key === 'Enter' && search()} autoFocus style={{ flex: 1 }} /><button className="btn" onClick={search}>{loading ? '...' : 'Chercher'}</button></div>
+          {results.length > 0 && <div className="search-results">{results.map(r => (<div key={r.id} className="search-result" onClick={() => select(r)}>{r.poster_path ? <img src={TMDB_IMG + r.poster_path} alt="" /> : <div style={{ width: 50, height: 75, background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.cream }}>?</div>}<div><div style={{ fontWeight: 700 }}>{r.title}</div><div style={{ color: COLORS.grey, fontSize: '0.9rem' }}>{r.release_date?.split('-')[0] || '?'}{r.vote_average > 0 && ` · ⭐ ${r.vote_average.toFixed(1)}`}</div></div></div>))}</div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
 </html>

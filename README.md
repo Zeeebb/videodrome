@@ -2,90 +2,67 @@
 
 Application web pour gérer les votes et la planification de votre ciné-club.
 
-## Fonctionnalités
+![Design japonais vintage VHS](https://img.shields.io/badge/style-VHS%20vintage-e63946)
+
+## ✨ Fonctionnalités
 
 - 🎬 **Proposer des films** via recherche TMDB
-- ⭐ **Voter et mettre en favoris** les propositions
+- ⭐ **Voter et mettre en favoris** les propositions  
 - 📅 **Calendrier de disponibilités** partagé
 - 📊 **Statistiques** par membre
 - 🎥 **Historique** des films vus
 - 💾 **Synchro Google Sheets** multi-utilisateurs
 
-## Installation
+## 🚀 Installation rapide
 
-### Étape 1 : Google Sheets (backend)
+### 1. Google Sheets (optionnel, pour le multi-utilisateurs)
 
 1. Crée une nouvelle feuille sur [Google Sheets](https://sheets.google.com)
 2. Va dans **Extensions > Apps Script**
-3. **Supprime tout le code** existant
-4. **Copie-colle le contenu de `Code.gs`**
-5. Clique sur **Déployer > Nouveau déploiement**
-6. Paramètres :
-   - Type : **Application Web**
-   - Exécuter en tant que : **Moi**
-   - Qui a accès : **Tout le monde**
-7. Clique **Déployer** et **autorise l'accès**
-8. **Copie l'URL** affichée (elle ressemble à `https://script.google.com/macros/s/ABC.../exec`)
+3. Supprime tout et colle le contenu de `Code.gs`
+4. **Déployer > Nouveau déploiement > Application Web**
+5. Exécuter en tant que: **Moi** / Qui a accès: **Tout le monde**
+6. Copie l'URL générée
 
-### Étape 2 : Configurer l'app
+### 2. Configuration
 
-1. Ouvre **`app.js`** dans un éditeur de texte
-2. Ligne 9, remplace :
-   ```javascript
-   const SHEETS_API = 'COLLE_TON_URL_ICI';
-   ```
-   par ton URL copiée :
-   ```javascript
-   const SHEETS_API = 'https://script.google.com/macros/s/ABC123xyz.../exec';
-   ```
-3. Sauvegarde
+Dans `index.html`, ligne ~47, remplace :
+```javascript
+const SHEETS_API = 'COLLE_TON_URL_ICI';
+```
+Par ton URL Google Apps Script.
 
-### Étape 3 : Mettre en ligne
+### 3. Hébergement
 
-**Option A - GitHub Pages (gratuit) :**
-1. Crée un repo sur GitHub
-2. Upload les 3 fichiers : `index.html`, `app.js`, `manifest.json`
-3. Settings > Pages > Source: main branch
-4. Ton site sera sur `https://tonpseudo.github.io/videodrome`
+**GitHub Pages :**
+1. Upload `index.html` et `Code.gs` sur GitHub
+2. Settings > Pages > Source: main branch
+3. Ton site sera sur `https://tonpseudo.github.io/videodrome`
 
-**Option B - Netlify Drop (le plus simple) :**
+**Netlify Drop :**
 1. Va sur [app.netlify.com/drop](https://app.netlify.com/drop)
-2. Glisse le dossier dedans
+2. Glisse le dossier
 3. C'est en ligne !
 
----
-
-## Fichiers
-
-| Fichier | Description |
-|---------|-------------|
-| `index.html` | Page web avec styles |
-| `app.js` | Code React (TMDB + Google Sheets) |
-| `manifest.json` | Config PWA |
-| `Code.gs` | À copier dans Google Apps Script |
-
----
-
-## Membres
+## 👥 Membres
 
 Les 5 membres du club avec leurs couleurs :
-- **Seb** (rouge)
-- **Bernard** (orange) 
-- **Gary** (jaune)
-- **Benoit** (vert)
-- **Arnaud** (bleu)
+- 🔴 **Seb** (rouge #e63946)
+- 🟠 **Bernard** (orange #f4a261)
+- 🟡 **Gary** (jaune #e9c46a)
+- 🟢 **Benoit** (vert #2a9d8f)
+- 🔵 **Arnaud** (bleu #457b9d)
 
-Pour modifier les membres, édite le tableau `MEMBERS` dans `app.js`.
+Pour modifier les membres, édite l'objet `MEMBERS` dans le fichier.
 
----
+## 🎨 Design
 
-## Design
-
-- Style vintage japonais / VHS 80s
+- Style vintage japonais / VHS années 80
 - Palette : crème (#f5f0e6) et rouge (#e63946)
 - Police : Fraunces
 - Cassettes VHS 3D avec animation au hover
 - Stickers étoiles 12 branches pour les votes
+- Bords dentelés style ticket de cinéma
 
 ---
 
