@@ -67,12 +67,12 @@ const MEMBERS = {
 const getMember = (id) => MEMBERS[id] || { color: '#888', name: id, initial: '?' };
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
-// Bord dentelé
+// Bord dentelé - triangles pointant vers le haut comme dans la preview
 const TornEdge = ({ color = COLORS.cream, height = 8 }) => (
   <svg width="100%" height={height} style={{ display: 'block' }}>
     <defs>
       <pattern id={`teeth-${color.replace('#', '')}`} x="0" y="0" width="16" height={height} patternUnits="userSpaceOnUse">
-        <polygon points={`0,0 8,${height} 16,0`} fill={color} />
+        <polygon points={`0,${height} 8,0 16,${height}`} fill={color} />
       </pattern>
     </defs>
     <rect width="100%" height={height} fill={`url(#teeth-${color.replace('#', '')})`} />
@@ -161,44 +161,83 @@ const VoteSticker = ({ memberId, index }) => {
   );
 };
 
-// VHS Card avec cassette qui sort
+// VHS Card - Design validé de la preview
 const VHSCard = ({ film, index, onClick, onFav, user }) => {
   const [isActive, setIsActive] = React.useState(false);
-  const [isAnimating, setIsAnimating] = React.useState(false);
-  const boxWidth = 175, boxHeight = 260, tapeWidth = 90;
-  const baseRotateY = index % 2 === 0 ? -15 : 15;
+  const boxWidth = 140, boxHeight = 210;
   const member = getMember(film.proposedBy);
   const isFav = film.favorites?.includes(user);
   
-  const handleEnter = () => { setIsActive(true); setIsAnimating(true); };
-  const handleLeave = () => { setIsActive(false); setTimeout(() => setIsAnimating(false), 450); };
-  const getZ = () => isActive ? 200 : (isAnimating ? 100 : 1);
-  
   return (
-    <div style={{ width: boxWidth, height: boxHeight + 50, cursor: 'pointer', marginTop: index % 2 === 1 ? 20 : 0, position: 'relative', zIndex: getZ(), perspective: 1000 }} onMouseEnter={handleEnter} onMouseLeave={handleLeave} onClick={onClick}>
-      <div style={{ position: 'relative', width: boxWidth, height: boxHeight, transform: isActive ? 'rotateY(0deg) rotateX(0deg) scale(1.15)' : `rotateY(${baseRotateY}deg) rotateX(5deg)`, transition: 'transform 0.4s ease', transformStyle: 'preserve-3d' }}>
-        {/* Cassette qui sort */}
-        <div style={{ position: 'absolute', top: 0, right: isActive ? -(tapeWidth * 0.625) : -15, width: tapeWidth, height: boxHeight, transition: 'right 0.4s ease', zIndex: -1, pointerEvents: 'none' }}>
-          <VHSTape title={film.title} />
-        </div>
-        {/* Bordures 3D */}
-        <div style={{ position: 'absolute', top: 0, left: -4, width: 4, height: '100%', background: `linear-gradient(to bottom, ${COLORS.cream}, #444)` }}></div>
-        <div style={{ position: 'absolute', top: -2, left: -4, width: 'calc(100% + 4px)', height: 2, background: `linear-gradient(to right, ${COLORS.cream}, #444)` }}></div>
-        <div style={{ position: 'absolute', bottom: -4, left: -4, width: 'calc(100% + 4px)', height: 4, background: '#333' }}></div>
+    <div 
+      style={{ 
+        width: boxWidth, 
+        height: boxHeight + 30, 
+        cursor: 'pointer',
+        perspective: '1000px',
+      }} 
+      onMouseEnter={() => setIsActive(true)} 
+      onMouseLeave={() => setIsActive(false)}
+      onClick={onClick}
+    >
+      <div style={{ 
+        position: 'relative', 
+        width: boxWidth, 
+        height: boxHeight, 
+        transform: isActive ? 'rotateY(0deg) rotateX(0deg) scale(1.1)' : 'rotateY(-12deg) rotateX(5deg)', 
+        transition: 'transform 0.4s ease', 
+        transformStyle: 'preserve-3d' 
+      }}>
+        {/* Bordures 3D - exactement comme la preview */}
+        <div style={{ position: 'absolute', top: 0, left: -3, width: 3, height: '100%', background: `linear-gradient(to bottom, ${COLORS.cream}, #333)` }}></div>
+        <div style={{ position: 'absolute', top: -2, left: -3, width: 'calc(100% + 3px)', height: 2, background: `linear-gradient(to right, ${COLORS.cream}, #333)` }}></div>
+        <div style={{ position: 'absolute', bottom: -3, left: -3, width: 'calc(100% + 3px)', height: 3, background: '#222' }}></div>
+        
         {/* Boîtier */}
-        <div style={{ position: 'absolute', width: '100%', height: '100%', background: '#000', boxShadow: isActive ? '0 25px 50px rgba(0,0,0,0.5)' : '10px 10px 25px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-          {/* Bande couleur */}
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 6, height: '100%', background: member.color, zIndex: 10 }}></div>
+        <div style={{ 
+          position: 'absolute', 
+          width: '100%', 
+          height: '100%', 
+          background: '#000', 
+          boxShadow: isActive ? '0 20px 40px rgba(0,0,0,0.5)' : '8px 8px 20px rgba(0,0,0,0.3)', 
+          overflow: 'hidden'
+        }}>
+          {/* Bande couleur du membre */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 5, height: '100%', background: member.color, zIndex: 10 }}></div>
+          
           {/* Stickers votes */}
           {film.votes?.map((v, i) => <VoteSticker key={v} memberId={v} index={i} />)}
+          
           {/* Poster */}
-          {film.poster ? <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <VHSPoster title={film.title} />}
+          {film.poster ? (
+            <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ 
+              width: '100%', 
+              height: '100%', 
+              background: 'linear-gradient(to bottom, #1a0a2e 0%, #d4145a 50%, #fbb03b 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#fbb03b', boxShadow: '0 0 30px #fbb03b' }}></div>
+            </div>
+          )}
+          
           {/* Bouton favori */}
           <button onClick={(e) => { e.stopPropagation(); onFav(); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 32, height: 32, fontSize: '1rem', cursor: 'pointer', zIndex: 30 }}>{isFav ? '❤️' : '🤍'}</button>
+          
           {/* Titre */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', padding: '3rem 0.75rem 0.75rem', zIndex: 20 }}>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', textShadow: '1px 1px 0 #000' }}>{film.title}</div>
-            <div style={{ color: '#aaa', fontSize: '0.8rem' }}>{film.year}</div>
+          <div style={{ 
+            position: 'absolute', 
+            bottom: 0, 
+            left: 0, 
+            right: 0, 
+            background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', 
+            padding: '2rem 0.5rem 0.5rem' 
+          }}>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>{film.title}</div>
+            <div style={{ color: '#aaa', fontSize: '0.7rem' }}>{film.year}</div>
           </div>
         </div>
       </div>
@@ -206,25 +245,70 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
   );
 };
 
-// VHS Placeholder avec ?
+// VHS Placeholder - Design validé de la preview
 const VHSPlaceholder = ({ index, onClick }) => {
   const [isActive, setIsActive] = React.useState(false);
-  const boxWidth = 175, boxHeight = 260;
-  const baseRotateY = index % 2 === 0 ? -15 : 15;
+  const boxWidth = 140, boxHeight = 210;
   
   return (
-    <div style={{ width: boxWidth, height: boxHeight + 50, cursor: 'pointer', marginTop: index % 2 === 1 ? 20 : 0, opacity: 0.5, perspective: 1000 }} onMouseEnter={() => setIsActive(true)} onMouseLeave={() => setIsActive(false)} onClick={onClick}>
-      <div style={{ position: 'relative', width: boxWidth, height: boxHeight, transform: isActive ? 'rotateY(0deg) rotateX(0deg) scale(1.05)' : `rotateY(${baseRotateY}deg) rotateX(5deg)`, transition: 'transform 0.4s ease', transformStyle: 'preserve-3d' }}>
-        <div style={{ position: 'absolute', top: 0, left: -4, width: 4, height: '100%', background: 'linear-gradient(to bottom, #888, #333)' }}></div>
-        <div style={{ position: 'absolute', top: -2, left: -4, width: 'calc(100% + 4px)', height: 2, background: 'linear-gradient(to right, #888, #333)' }}></div>
-        <div style={{ position: 'absolute', bottom: -4, left: -4, width: 'calc(100% + 4px)', height: 4, background: '#222' }}></div>
-        <div style={{ position: 'absolute', width: '100%', height: '100%', background: '#1a1a1a', boxShadow: '8px 8px 20px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 6, height: '100%', background: '#444', zIndex: 10 }}></div>
-          <div style={{ fontSize: '5rem', color: '#333', fontWeight: 700 }}>?</div>
-          <div style={{ position: 'absolute', top: '20%', left: '10%', right: '10%', height: 2, background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
-          <div style={{ position: 'absolute', top: '35%', left: '15%', right: '15%', height: 2, background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', padding: '3rem 0.75rem 0.75rem', zIndex: 20 }}>
-            <div style={{ color: '#555', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>+ Proposer un film</div>
+    <div 
+      style={{ 
+        width: boxWidth, 
+        height: boxHeight + 30, 
+        cursor: 'pointer',
+        opacity: 0.6,
+        perspective: '1000px',
+      }} 
+      onMouseEnter={() => setIsActive(true)} 
+      onMouseLeave={() => setIsActive(false)} 
+      onClick={onClick}
+    >
+      <div style={{ 
+        position: 'relative', 
+        width: boxWidth, 
+        height: boxHeight, 
+        transform: isActive ? 'rotateY(0deg) rotateX(0deg) scale(1.05)' : 'rotateY(-12deg) rotateX(5deg)', 
+        transition: 'transform 0.4s ease', 
+        transformStyle: 'preserve-3d' 
+      }}>
+        {/* Bordures 3D */}
+        <div style={{ position: 'absolute', top: 0, left: -3, width: 3, height: '100%', background: 'linear-gradient(to bottom, #888, #333)' }}></div>
+        <div style={{ position: 'absolute', top: -2, left: -3, width: 'calc(100% + 3px)', height: 2, background: 'linear-gradient(to right, #888, #333)' }}></div>
+        <div style={{ position: 'absolute', bottom: -3, left: -3, width: 'calc(100% + 3px)', height: 3, background: '#222' }}></div>
+        
+        {/* Boîtier */}
+        <div style={{ 
+          position: 'absolute', 
+          width: '100%', 
+          height: '100%', 
+          background: '#1a1a1a', 
+          boxShadow: '8px 8px 20px rgba(0,0,0,0.3)', 
+          overflow: 'hidden', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center' 
+        }}>
+          {/* Bande latérale grise */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 5, height: '100%', background: '#444', zIndex: 10 }}></div>
+          
+          {/* Point d'interrogation */}
+          <div style={{ fontSize: '4rem', color: '#333', fontWeight: 700 }}>?</div>
+          
+          {/* Lignes décoratives */}
+          <div style={{ position: 'absolute', top: '20%', left: '10%', right: '10%', height: '2px', background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
+          <div style={{ position: 'absolute', top: '35%', left: '15%', right: '15%', height: '2px', background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
+          
+          {/* Texte en bas */}
+          <div style={{ 
+            position: 'absolute', 
+            bottom: 0, 
+            left: 0, 
+            right: 0, 
+            background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', 
+            padding: '2rem 0.5rem 0.5rem' 
+          }}>
+            <div style={{ color: '#555', fontWeight: 700, fontSize: '0.7rem', textTransform: 'uppercase' }}>+ Proposer</div>
           </div>
         </div>
       </div>
@@ -415,16 +499,36 @@ const App = () => {
           </section>
 
           {/* Section Top Votes */}
-          <section style={{ background: COLORS.red, padding: '2rem 2rem 3rem', position: 'relative', zIndex: 20, overflow: 'visible' }}>
-            <TornEdge color={COLORS.cream} height={8} />
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0 }}><TornEdge color={COLORS.cream} height={8} /></div>
-            <div style={{ maxWidth: 1200, margin: '0 auto', paddingTop: '1rem' }}>
-              <h2 style={{ color: COLORS.cream, fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Top votes</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
+          <section style={{ background: COLORS.red, padding: '2rem', position: 'relative' }}>
+            {/* Bord dentelé haut */}
+            <svg width="100%" height="8" style={{ position: 'absolute', top: 0, left: 0 }}>
+              <defs>
+                <pattern id="teeth-top" x="0" y="0" width="16" height="8" patternUnits="userSpaceOnUse">
+                  <polygon points="0,8 8,0 16,8" fill={COLORS.cream} />
+                </pattern>
+              </defs>
+              <rect width="100%" height="8" fill="url(#teeth-top)" />
+            </svg>
+            
+            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+              <h2 style={{ color: COLORS.cream, fontSize: '1.2rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.5rem' }}>
+                À voter ({topVotes.length > 0 ? topVotes.length : 0})
+              </h2>
+              
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem' }}>
                 {topVotes.length > 0 ? topVotes.map((f, i) => <VHSCard key={f.id} film={f} index={i} onClick={() => setSelected(f)} onFav={() => fav(f.id)} user={user} />) : [...Array(3)].map((_, i) => <VHSPlaceholder key={i} index={i} onClick={() => setShowAdd(true)} />)}
               </div>
             </div>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, transform: 'scaleY(-1)' }}><TornEdge color={COLORS.cream} height={8} /></div>
+            
+            {/* Bord dentelé bas */}
+            <svg width="100%" height="8" style={{ position: 'absolute', bottom: 0, left: 0, transform: 'scaleY(-1)' }}>
+              <defs>
+                <pattern id="teeth-bottom" x="0" y="0" width="16" height="8" patternUnits="userSpaceOnUse">
+                  <polygon points="0,8 8,0 16,8" fill={COLORS.cream} />
+                </pattern>
+              </defs>
+              <rect width="100%" height="8" fill="url(#teeth-bottom)" />
+            </svg>
           </section>
 
           {/* Section Propositions */}
