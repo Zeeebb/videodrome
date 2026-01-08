@@ -1,9 +1,16 @@
 {
-  "name": "VIDEODROME",
+  "name": "VIDEODROME - Ciné-Club Série B",
   "short_name": "Videodrome",
-  "description": "Ciné-Club Série B",
-  "start_url": ".",
+  "description": "Application de vote et planification pour ciné-club série B",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000"
+  "background_color": "#1a1a1a",
+  "theme_color": "#e63946",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23e63946' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='%23f5f0e6'>📼</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }
