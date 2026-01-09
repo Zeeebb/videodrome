@@ -68,22 +68,6 @@ const MEMBERS = {
 const getMember = (id) => MEMBERS[id] || { color: '#888', name: id, initial: '?' };
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
-// Bord dentelé - triangles avec base sur la bande rouge (pointes vers l'extérieur)
-const TornEdge = ({ color = COLORS.cream, height = 8, flip = false }) => (
-  <svg width="100%" height={height} style={{ display: 'block' }} preserveAspectRatio="none">
-    <defs>
-      <pattern id={`teeth-${color.replace('#', '')}-${flip}`} x="0" y="0" width="16" height={height} patternUnits="userSpaceOnUse">
-        {flip ? (
-          <polygon points={`0,0 8,${height} 16,0`} fill={color} />
-        ) : (
-          <polygon points={`0,${height} 8,0 16,${height}`} fill={color} />
-        )}
-      </pattern>
-    </defs>
-    <rect width="100%" height={height} fill={`url(#teeth-${color.replace('#', '')}-${flip})`} />
-  </svg>
-);
-
 // Logo SVG VIDEODROME
 const LogoSVG = () => (
   <svg viewBox="0 0 771 92" style={{ height: 38, width: 'auto', display: 'block', fill: COLORS.cream }}>
@@ -552,7 +536,6 @@ const App = () => {
 
   if (loading) return <div className="loading-screen"><div className="loading-logo">VIDEODROME</div></div>;
 
-  const membersList = Object.entries(MEMBERS);
   const placeholdersCount = Math.max(0, 6 - filtered.length);
 
   return (
@@ -593,17 +576,6 @@ const App = () => {
           ))}
         </div>
         
-        {/* Dents transparentes qui créent un trou dans le header noir */}
-        <div style={{ position: 'relative', height: 8, overflow: 'hidden' }}>
-          <svg width="100%" height="8" style={{ display: 'block' }} preserveAspectRatio="none">
-            <defs>
-              <pattern id="header-teeth" x="0" y="0" width="16" height="8" patternUnits="userSpaceOnUse">
-                <polygon points="0,0 8,8 16,0 16,8 0,8" fill={COLORS.black} />
-              </pattern>
-            </defs>
-            <rect width="100%" height="8" fill="url(#header-teeth)" />
-          </svg>
-        </div>
       </header>
 
       {tab === 'propositions' && (
@@ -631,23 +603,13 @@ const App = () => {
             </div>
           </section>
 
-          {/* Section Top Votes avec dents corrigées (Point 7) */}
-          <section style={{ background: COLORS.red, padding: '2rem 2rem 3rem', position: 'relative', zIndex: 20, overflow: 'visible' }}>
-            {/* Bord dentelé haut - base des triangles sur la bande rouge, pointes vers le haut */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
-              <TornEdge color={COLORS.cream} height={8} flip={false} />
-            </div>
-            
-            <div style={{ maxWidth: 1200, margin: '0 auto', paddingTop: '1rem' }}>
+          {/* Section Top Votes */}
+          <section style={{ background: COLORS.red, padding: '2rem', position: 'relative', zIndex: 20 }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
               <h2 style={{ color: COLORS.cream, fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Top votes</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
                 {topVotes.length > 0 ? topVotes.map((f, i) => <VHSCard key={f.id} film={f} index={i} onClick={() => setSelected(f)} onFav={() => fav(f.id)} user={user} />) : [...Array(3)].map((_, i) => <VHSPlaceholder key={i} index={i} onClick={() => setShowAdd(true)} />)}
               </div>
-            </div>
-            
-            {/* Bord dentelé bas - base des triangles sur la bande rouge, pointes vers le bas */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-              <TornEdge color={COLORS.cream} height={8} flip={true} />
             </div>
           </section>
 
