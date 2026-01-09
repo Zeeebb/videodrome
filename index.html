@@ -31,6 +31,28 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     .sync-icon { display: inline-block; animation: spin 1s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    /* Adaptation grandes résolutions */
+    @media (min-width: 1600px) {
+      body { font-size: 1.1rem; }
+      .btn { padding: 0.9rem 1.8rem; font-size: 1.05rem; }
+      .search-box { padding: 0.9rem 1.2rem; font-size: 1.1rem; }
+      .modal { max-width: 750px; }
+      .modal-head { padding: 1.8rem; }
+      .modal-body { padding: 1.8rem; }
+      .modal-actions { padding: 1.8rem; }
+    }
+    @media (min-width: 2000px) {
+      body { font-size: 1.2rem; }
+      .btn { padding: 1rem 2rem; font-size: 1.15rem; }
+      .search-box { padding: 1rem 1.4rem; font-size: 1.2rem; }
+      .modal { max-width: 850px; }
+    }
+    @media (min-width: 2500px) {
+      body { font-size: 1.35rem; }
+      .btn { padding: 1.1rem 2.2rem; font-size: 1.25rem; }
+      .modal { max-width: 950px; }
+    }
   </style>
 </head>
 <body>
@@ -107,18 +129,39 @@ const VHSPoster = ({ title }) => (
 
 // Cassette VHS SVG (SVG exact fourni, pivoté -90° pour être vertical)
 const VHSTape = ({ title }) => {
-  // Calcul de la taille de police adaptative
-  const getFontSize = (text) => {
-    if (!text) return 11;
-    if (text.length <= 10) return 11;
-    if (text.length <= 15) return 9;
-    if (text.length <= 22) return 7;
-    return 6;
+  // Fonction pour couper le titre en lignes (max 10 char par ligne, entre les mots)
+  const splitTitle = (text) => {
+    if (!text || text.length <= 10) return [text];
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+    
+    for (const word of words) {
+      if (currentLine.length === 0) {
+        currentLine = word;
+      } else if ((currentLine + ' ' + word).length <= 12) {
+        currentLine += ' ' + word;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+    return lines.slice(0, 3); // Max 3 lignes
   };
   
-  // Le SVG original fait 274x150. Pivoté de -90°, il fait visuellement 150x274
-  // Pour matcher la boîte (175x260), on scale pour que la hauteur soit ~260
-  // 260/274 = 0.949, donc largeur = 150 * 0.949 = 142
+  const lines = splitTitle(title);
+  
+  // Calcul de la taille de police adaptative
+  const getFontSize = () => {
+    if (lines.length === 1) return 11;
+    if (lines.length === 2) return 9;
+    return 7;
+  };
+  
+  const fontSize = getFontSize();
+  const lineHeight = fontSize + 3;
+  const startY = 81 - ((lines.length - 1) * lineHeight) / 2;
   
   return (
     <div style={{ 
@@ -221,18 +264,18 @@ const VHSTape = ({ title }) => {
         {/* Titre sur l'étiquette blanche */}
         <text 
           x="137" 
-          y="81" 
-          textAnchor="middle" 
-          dominantBaseline="middle"
+          textAnchor="middle"
           style={{ 
-            fontSize: getFontSize(title), 
+            fontSize: fontSize, 
             fontWeight: 700, 
             fill: '#1a1a1a', 
             textTransform: 'uppercase',
             fontFamily: 'Arial, sans-serif'
           }}
         >
-          {title}
+          {lines.map((line, i) => (
+            <tspan key={i} x="137" y={startY + i * lineHeight}>{line}</tspan>
+          ))}
         </text>
       </svg>
     </div>
@@ -858,7 +901,7 @@ const DetailModal = ({ film, user, onClose, onVote, onFav, onSchedule, onUnsched
         <div className="modal-head"><div style={{ fontWeight: 700, fontSize: '1.2rem' }}>Détails</div><button className="modal-close" onClick={onClose}>×</button></div>
         <div className="modal-body">
           <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: 120, flexShrink: 0 }}>{film.poster ? <img src={film.poster} alt="" style={{ width: '100%' }} /> : <div style={{ width: '100%', aspectRatio: '2/3', background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>📼</div>}</div>
+            <div style={{ width: 200, flexShrink: 0 }}>{film.poster ? <img src={film.poster} alt="" style={{ width: '100%' }} /> : <div style={{ width: '100%', aspectRatio: '2/3', background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>📼</div>}</div>
             <div><div style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: 1.1, marginBottom: '0.5rem' }}>{film.title}</div><div style={{ color: COLORS.grey, marginBottom: '0.75rem' }}>{film.year} · {film.director}{film.runtime ? ` · ${film.runtime} min` : ''}</div><div style={{ display: 'inline-block', padding: '0.3rem 0.8rem', color: 'white', fontWeight: 700, fontSize: '0.85rem', background: p.color }}>Proposé par {p.name}</div></div>
           </div>
           {film.overview && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Synopsis</div><div style={{ lineHeight: 1.6 }}>{film.overview}</div></div>}
