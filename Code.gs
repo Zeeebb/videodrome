@@ -39,16 +39,17 @@ function loadData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const films = [];
   const availabilities = {};
+  let tiebreaker = {};
   
   const filmsSheet = ss.getSheetByName('Films');
   if (filmsSheet && filmsSheet.getLastRow() > 1) {
-    const data = filmsSheet.getRange(2, 1, filmsSheet.getLastRow() - 1, 17).getValues();
-    const headers = ['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'votes', 'favorites', 'watchedDate'];
+    const data = filmsSheet.getRange(2, 1, filmsSheet.getLastRow() - 1, 16).getValues();
+    const headers = ['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate'];
     data.forEach(row => {
       if (row[0]) {
         const film = {};
         headers.forEach((h, i) => {
-          if (h === 'votes' || h === 'favorites') {
+          if (h === 'likes') {
             try { film[h] = row[i] ? JSON.parse(row[i]) : []; } catch { film[h] = []; }
           } else { film[h] = row[i]; }
         });
@@ -67,7 +68,17 @@ function loadData() {
     });
   }
   
-  return { films, availabilities };
+  const tieSheet = ss.getSheetByName('Tiebreaker');
+  if (tieSheet && tieSheet.getLastRow() > 1) {
+    const data = tieSheet.getRange(2, 1, tieSheet.getLastRow() - 1, 2).getValues();
+    data.forEach(row => {
+      if (row[0]) {
+        tiebreaker[row[0]] = row[1];
+      }
+    });
+  }
+  
+  return { films, availabilities, tiebreaker };
 }
 
 function saveData(data) {
@@ -77,12 +88,12 @@ function saveData(data) {
     let sheet = ss.getSheetByName('Films');
     if (!sheet) {
       sheet = ss.insertSheet('Films');
-      sheet.appendRow(['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'votes', 'favorites', 'watchedDate']);
+      sheet.appendRow(['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']);
     }
     if (sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
-    const headers = ['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'votes', 'favorites', 'watchedDate'];
+    const headers = ['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate'];
     data.films.forEach(film => {
-      const row = headers.map(h => (h === 'votes' || h === 'favorites') ? JSON.stringify(film[h] || []) : (film[h] || ''));
+      const row = headers.map(h => h === 'likes' ? JSON.stringify(film[h] || []) : (film[h] || ''));
       sheet.appendRow(row);
     });
   }
@@ -96,6 +107,18 @@ function saveData(data) {
     if (sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
     Object.entries(data.availabilities).forEach(([date, users]) => {
       sheet.appendRow([date, JSON.stringify(users)]);
+    });
+  }
+  
+  if (data.tiebreaker !== undefined) {
+    let sheet = ss.getSheetByName('Tiebreaker');
+    if (!sheet) {
+      sheet = ss.insertSheet('Tiebreaker');
+      sheet.appendRow(['user', 'filmId']);
+    }
+    if (sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
+    Object.entries(data.tiebreaker || {}).forEach(([user, filmId]) => {
+      sheet.appendRow([user, filmId]);
     });
   }
 }

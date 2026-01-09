@@ -304,8 +304,8 @@ const STICKER_POS = [
   { top: '15%', right: '12%', rot: -20 },
 ];
 
-// Sticker Vote (étoile)
-const VoteSticker = ({ memberId, index }) => {
+// Sticker Like (étoile)
+const LikeSticker = ({ memberId, index }) => {
   const m = getMember(memberId);
   const p = STICKER_POS[index % STICKER_POS.length];
   const rot = p.rot + (index * 13) % 25 - 12;
@@ -320,37 +320,14 @@ const VoteSticker = ({ memberId, index }) => {
   );
 };
 
-// Sticker Favori (rond comme un macaron)
-const FavSticker = ({ memberId, index }) => {
-  const m = getMember(memberId);
-  // Positions différentes des votes (côté gauche)
-  const positions = [
-    { top: '12%', left: '8%', rot: -10 },
-    { top: '30%', left: '5%', rot: 15 },
-    { top: '48%', left: '10%', rot: -5 },
-    { top: '65%', left: '6%', rot: 12 },
-    { top: '20%', left: '12%', rot: -18 },
-  ];
-  const p = positions[index % positions.length];
-  const rot = p.rot + (index * 7) % 15 - 7;
-  return (
-    <div style={{ position: 'absolute', top: p.top, left: p.left, transform: `rotate(${rot}deg)`, zIndex: 20 + index, pointerEvents: 'none' }}>
-      <svg width="36" height="36" viewBox="0 0 36 36" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.5))' }}>
-        <circle cx="18" cy="18" r="16" fill={m.color} stroke="#fff" strokeWidth="2"/>
-        <text x="18" y="18" textAnchor="middle" dominantBaseline="central" style={{ fontSize: m.initial.length > 1 ? 10 : 13, fontWeight: 800, fill: '#fff' }}>{m.initial}</text>
-        <text x="18" y="28" textAnchor="middle" style={{ fontSize: 6, fill: '#fff', opacity: 0.8 }}>♥</text>
-      </svg>
-    </div>
-  );
-};
-
 // VHS Card avec cassette qui sort + rotation/hauteur aléatoire pour effet vrac
-const VHSCard = ({ film, index, onClick, onFav, user }) => {
+const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLikes = 6 }) => {
   const [isActive, setIsActive] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
   const boxWidth = 175, boxHeight = 260, tapeWidth = 175;
   const member = getMember(film.proposedBy);
-  const isFav = film.favorites?.includes(user);
+  const isLiked = film.likes?.includes(user);
+  const canLike = isLiked || userLikesCount < maxLikes;
   
   // Rotation et décalage aléatoire basé sur l'index (effet vrac)
   const randomRotation = React.useMemo(() => ((index * 17) % 11) - 5, [index]); // -5 à +5 degrés
@@ -407,11 +384,8 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
           overflow: 'hidden',
           clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)'
         }}>
-          {/* Stickers votes (étoiles) */}
-          {film.votes?.map((v, i) => <VoteSticker key={`v-${v}`} memberId={v} index={i} />)}
-          
-          {/* Stickers favoris (macarons) */}
-          {film.favorites?.map((f, i) => <FavSticker key={`f-${f}`} memberId={f} index={i} />)}
+          {/* Stickers likes (étoiles) */}
+          {film.likes?.map((v, i) => <LikeSticker key={`l-${v}`} memberId={v} index={i} />)}
           
           {/* Poster éclairci de 3% */}
           {film.poster ? (
@@ -456,9 +430,23 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
             pointerEvents: 'none'
           }}></div>
           
-          {/* Bouton favori - seulement visible au hover */}
+          {/* Bouton like - seulement visible au hover */}
           {isActive && (
-            <button onClick={(e) => { e.stopPropagation(); onFav(); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '50%', width: 36, height: 36, fontSize: '1.1rem', cursor: 'pointer', zIndex: 30, transition: 'transform 0.2s' }}>{isFav ? '❤️' : '🤍'}</button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); if (canLike) onLike(); }} 
+              style={{ 
+                position: 'absolute', top: 8, right: 8, 
+                background: isLiked ? COLORS.red : 'rgba(0,0,0,0.7)', 
+                border: 'none', borderRadius: '50%', 
+                width: 36, height: 36, fontSize: '1.1rem', 
+                cursor: canLike ? 'pointer' : 'not-allowed', 
+                zIndex: 30, transition: 'transform 0.2s',
+                opacity: canLike ? 1 : 0.5,
+                color: isLiked ? '#fff' : '#ffd700'
+              }}
+            >
+              {isLiked ? '★' : '☆'}
+            </button>
           )}
           
           {/* Titre */}
@@ -533,13 +521,16 @@ const VHSPlaceholder = ({ index, onClick }) => {
 
 // Mini VHS Card pour la prochaine séance (Point 6)
 // App principale
+const MAX_LIKES = 6;
+
 const App = () => {
   const [user, setUser] = React.useState(() => localStorage.getItem('vd_user') || 'seb');
   const [tab, setTab] = React.useState('propositions');
   const [films, setFilms] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_films')) || []; } catch { return []; } });
   const [avail, setAvail] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_avail')) || {}; } catch { return {}; } });
+  const [tiebreaker, setTiebreaker] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_tiebreaker')) || {}; } catch { return {}; } });
   const [search, setSearch] = React.useState('');
-  const [sort, setSort] = React.useState('votes');
+  const [sort, setSort] = React.useState('likes');
   const [selected, setSelected] = React.useState(null);
   const [showAdd, setShowAdd] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
@@ -549,6 +540,7 @@ const App = () => {
   React.useEffect(() => { localStorage.setItem('vd_user', user); }, [user]);
   React.useEffect(() => { localStorage.setItem('vd_films', JSON.stringify(films)); }, [films]);
   React.useEffect(() => { localStorage.setItem('vd_avail', JSON.stringify(avail)); }, [avail]);
+  React.useEffect(() => { localStorage.setItem('vd_tiebreaker', JSON.stringify(tiebreaker)); }, [tiebreaker]);
   React.useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
@@ -556,12 +548,18 @@ const App = () => {
     setSyncing(true);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       const res = await fetch(SHEETS_API, { signal: controller.signal });
       clearTimeout(timeoutId);
       const data = await res.json();
-      if (data.films) setFilms(data.films.map(f => ({ ...f, id: parseInt(f.id) || f.id, year: parseInt(f.year) || 0, votes: f.votes ? (typeof f.votes === 'string' ? JSON.parse(f.votes) : f.votes) : [], favorites: f.favorites ? (typeof f.favorites === 'string' ? JSON.parse(f.favorites) : f.favorites) : [] })));
+      if (data.films) setFilms(data.films.map(f => ({ 
+        ...f, 
+        id: parseInt(f.id) || f.id, 
+        year: parseInt(f.year) || 0, 
+        likes: f.likes ? (typeof f.likes === 'string' ? JSON.parse(f.likes) : f.likes) : (f.votes ? (typeof f.votes === 'string' ? JSON.parse(f.votes) : f.votes) : [])
+      })));
       if (data.availabilities) setAvail(data.availabilities);
+      if (data.tiebreaker) setTiebreaker(data.tiebreaker);
       notify('Données synchronisées');
     } catch(e) { 
       console.error('Erreur chargement:', e); 
@@ -570,23 +568,37 @@ const App = () => {
     setLoading(false);
   };
 
-  const save = async (f, a) => {
+  const save = async (f, a, t) => {
     if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') return;
     setSyncing(true);
-    try { await fetch(SHEETS_API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ films: f || films, availabilities: a || avail }) }); } catch(e) { console.error(e); }
+    try { await fetch(SHEETS_API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ films: f || films, availabilities: a || avail, tiebreaker: t || tiebreaker }) }); } catch(e) { console.error(e); }
     setSyncing(false);
   };
 
   const scheduled = films.find(f => f.status === 'scheduled');
   const proposed = films.filter(f => f.status === 'proposed');
   const watched = films.filter(f => f.status === 'watched').sort((a, b) => new Date(b.watchedDate) - new Date(a.watchedDate));
+  
+  // Compteur de likes de l'utilisateur
+  const userLikesCount = proposed.filter(f => f.likes?.includes(user)).length;
+
+  // Tri par likes puis par ancienneté
+  const sortedByLikes = [...proposed].sort((a, b) => {
+    const diff = (b.likes?.length || 0) - (a.likes?.length || 0);
+    if (diff !== 0) return diff;
+    return a.id - b.id; // Plus ancien d'abord en cas d'égalité
+  });
+
+  // Détection des ex-aequo en tête
+  const topLikes = sortedByLikes.length > 0 ? sortedByLikes[0].likes?.length || 0 : 0;
+  const exaequo = topLikes > 0 ? sortedByLikes.filter(f => (f.likes?.length || 0) === topLikes) : [];
+  const hasExaequo = exaequo.length > 1;
 
   const filtered = React.useMemo(() => {
     let r = [...proposed];
     if (search) { const q = search.toLowerCase(); r = r.filter(f => f.title?.toLowerCase().includes(q) || f.director?.toLowerCase().includes(q)); }
     switch(sort) {
-      case 'favorites': return r.sort((a, b) => (b.favorites?.length || 0) - (a.favorites?.length || 0));
-      case 'votes': return r.sort((a, b) => (b.votes?.length || 0) - (a.votes?.length || 0));
+      case 'likes': return r.sort((a, b) => { const diff = (b.likes?.length || 0) - (a.likes?.length || 0); return diff !== 0 ? diff : a.id - b.id; });
       case 'recent': return r.sort((a, b) => b.id - a.id);
       case 'year': return r.sort((a, b) => b.year - a.year);
       case 'alpha': return r.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'fr'));
@@ -594,31 +606,54 @@ const App = () => {
     }
   }, [proposed, search, sort]);
 
-  const topVotes = [...proposed].sort((a, b) => (b.votes?.length || 0) - (a.votes?.length || 0)).slice(0, 3);
   const notify = (msg) => setToast(msg);
 
   const add = (film) => {
-    const nf = { ...film, id: Date.now(), proposedBy: user, proposedDate: new Date().toISOString(), status: 'proposed', votes: [], favorites: [] };
+    const nf = { ...film, id: Date.now(), proposedBy: user, proposedDate: new Date().toISOString(), status: 'proposed', likes: [] };
     const newFilms = [nf, ...films];
     setFilms(newFilms); save(newFilms); setShowAdd(false);
     notify(`"${film.title}" ajouté`);
   };
 
-  const vote = (id) => {
-    const newFilms = films.map(f => f.id !== id ? f : { ...f, votes: (f.votes || []).includes(user) ? f.votes.filter(v => v !== user) : [...(f.votes || []), user] });
+  const like = (id) => {
+    const film = films.find(f => f.id === id);
+    const isLiked = film?.likes?.includes(user);
+    // Vérifier la limite seulement si on ajoute un like
+    if (!isLiked && userLikesCount >= MAX_LIKES) {
+      notify(`Maximum ${MAX_LIKES} likes atteint !`);
+      return;
+    }
+    const newFilms = films.map(f => f.id !== id ? f : { ...f, likes: (f.likes || []).includes(user) ? f.likes.filter(v => v !== user) : [...(f.likes || []), user] });
     setFilms(newFilms); save(newFilms);
     if (selected?.id === id) setSelected(newFilms.find(f => f.id === id));
   };
 
-  const fav = (id) => {
-    const newFilms = films.map(f => f.id !== id ? f : { ...f, favorites: (f.favorites || []).includes(user) ? f.favorites.filter(v => v !== user) : [...(f.favorites || []), user] });
-    setFilms(newFilms); save(newFilms);
-    if (selected?.id === id) setSelected(newFilms.find(f => f.id === id));
+  // Vote pour départager (1 seul vote par personne)
+  const voteTiebreaker = (filmId) => {
+    const newTiebreaker = { ...tiebreaker, [user]: filmId };
+    setTiebreaker(newTiebreaker);
+    save(null, null, newTiebreaker);
+    notify('Vote enregistré !');
   };
+
+  // Calcul des votes de départage
+  const tiebreakerVotes = React.useMemo(() => {
+    const votes = {};
+    exaequo.forEach(f => votes[f.id] = 0);
+    Object.values(tiebreaker).forEach(filmId => {
+      if (votes[filmId] !== undefined) votes[filmId]++;
+    });
+    return votes;
+  }, [exaequo, tiebreaker]);
+
+  // Vérifier si tous ont voté pour départager
+  const allVoted = Object.keys(MEMBERS).every(m => tiebreaker[m] !== undefined);
 
   const schedule = (id) => {
     const newFilms = films.map(f => ({ ...f, status: f.id === id ? 'scheduled' : (f.status === 'scheduled' ? 'proposed' : f.status) }));
-    setFilms(newFilms); save(newFilms); setSelected(null);
+    // Reset tiebreaker quand on programme
+    setTiebreaker({});
+    setFilms(newFilms); save(newFilms, null, {}); setSelected(null);
     notify('Film programmé !');
   };
 
@@ -677,7 +712,7 @@ const App = () => {
     <div>
       {/* Header */}
       <header style={{ background: COLORS.black, padding: '1.5rem 0 0', position: 'sticky', top: 0, zIndex: 100, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1200, margin: '0 auto', padding: '0 2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '90vw', margin: '0 auto', padding: '0 2rem' }}>
           {/* Logo avec bandes colorées horizontales qui vont du bord gauche jusqu'au logo */}
           <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
             {/* Bandes colorées horizontales - du bord gauche de l'écran jusqu'au logo, même hauteur (38px) */}
@@ -712,7 +747,7 @@ const App = () => {
         </div>
         
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 0, marginTop: '1rem', maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto', paddingBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: 0, marginTop: '1rem', maxWidth: '90vw', marginLeft: 'auto', marginRight: 'auto', paddingBottom: '0.75rem' }}>
           {[['propositions', 'Propositions', proposed.length], ['planning', 'Planning', 0], ['historique', 'Historique', watched.length], ['membres', 'Membres', 0]].map(([k, label, count]) => (
             <button key={k} onClick={() => setTab(k)} style={{ background: 'transparent', border: 'none', color: tab === k ? COLORS.cream : COLORS.grey, fontFamily: 'inherit', fontWeight: 700, fontSize: '0.9rem', padding: '0.75rem 1.5rem', cursor: 'pointer', position: 'relative' }}>
               {label}{count > 0 && <span style={{ background: COLORS.red, color: COLORS.cream, fontSize: '0.7rem', padding: '0.15rem 0.5rem', marginLeft: '0.5rem', borderRadius: 10 }}>{count}</span>}
@@ -726,11 +761,11 @@ const App = () => {
       {tab === 'propositions' && (
         <>
           {/* Hero - Prochaine séance avec VHSCard */}
-          <section style={{ background: COLORS.cream, padding: '2rem' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+          <section style={{ background: COLORS.cream, padding: '2rem 2rem 3rem' }}>
+            <div style={{ maxWidth: '90vw', margin: '0 auto', display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
               {/* VHSCard ou Placeholder */}
               {scheduled ? (
-                <VHSCard film={scheduled} index={99} onClick={() => setSelected(scheduled)} onFav={() => fav(scheduled.id)} user={user} />
+                <VHSCard film={scheduled} index={99} onClick={() => setSelected(scheduled)} onLike={() => like(scheduled.id)} user={user} userLikesCount={userLikesCount} />
               ) : (
                 <VHSPlaceholder index={99} onClick={() => setShowAdd(true)} />
               )}
@@ -753,33 +788,86 @@ const App = () => {
             </div>
           </section>
 
-          {/* Section Top Votes */}
-          <section style={{ background: COLORS.red, padding: '2rem', position: 'relative', zIndex: 20 }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-              <h2 style={{ color: COLORS.cream, fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Top votes</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
-                {topVotes.length > 0 ? topVotes.map((f, i) => <VHSCard key={f.id} film={f} index={i} onClick={() => setSelected(f)} onFav={() => fav(f.id)} user={user} />) : [...Array(3)].map((_, i) => <VHSPlaceholder key={i} index={i} onClick={() => setShowAdd(true)} />)}
+          {/* Section Ex-Aequo (si plusieurs films en tête avec même nombre de likes) */}
+          {hasExaequo && (
+            <section style={{ background: COLORS.red, padding: '2rem', position: 'relative', zIndex: 20 }}>
+              <div style={{ maxWidth: '90vw', margin: '0 auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <h2 style={{ color: COLORS.cream, fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
+                    Ex-æquo ! ({exaequo.length} films à {topLikes} likes)
+                  </h2>
+                  <span style={{ color: COLORS.cream, opacity: 0.8, fontSize: '0.9rem' }}>
+                    — Vote obligatoire pour départager (1 seul choix)
+                  </span>
+                </div>
+                
+                {/* Indicateur de votes */}
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                  {Object.entries(MEMBERS).map(([k, m]) => {
+                    const hasVoted = tiebreaker[k] !== undefined;
+                    return (
+                      <div key={k} style={{ 
+                        display: 'flex', alignItems: 'center', gap: '0.3rem', 
+                        padding: '0.3rem 0.6rem', 
+                        background: hasVoted ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
+                        color: COLORS.cream
+                      }}>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: m.color }}></span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{m.name}</span>
+                        <span>{hasVoted ? '✓' : '...'}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                  {exaequo.map((f, i) => {
+                    const myVote = tiebreaker[user] === f.id;
+                    const voteCount = tiebreakerVotes[f.id] || 0;
+                    return (
+                      <div key={f.id} style={{ position: 'relative' }}>
+                        <VHSCard film={f} index={i} onClick={() => setSelected(f)} onLike={() => like(f.id)} user={user} userLikesCount={userLikesCount} />
+                        {/* Bouton vote départage */}
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); voteTiebreaker(f.id); }}
+                          style={{ 
+                            position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
+                            background: myVote ? COLORS.cream : 'rgba(0,0,0,0.8)', 
+                            color: myVote ? COLORS.red : COLORS.cream,
+                            border: `3px solid ${COLORS.cream}`,
+                            padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer',
+                            fontSize: '0.9rem', zIndex: 50
+                          }}
+                        >
+                          {myVote ? '✓ Mon choix' : 'Choisir'} {voteCount > 0 && `(${voteCount})`}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {/* Section Propositions */}
           <section style={{ background: COLORS.cream, padding: '2rem', position: 'relative', zIndex: 30 }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <div style={{ maxWidth: '90vw', margin: '0 auto' }}>
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <input className="search-box" placeholder="Rechercher un film..." value={search} onChange={e => setSearch(e.target.value)} />
                 <select value={sort} onChange={e => setSort(e.target.value)} style={{ padding: '0.75rem 1rem', border: `2px solid ${COLORS.black}`, background: COLORS.cream, fontFamily: 'inherit', fontWeight: 700 }}>
-                  <option value="votes">▲ Votes</option>
-                  <option value="favorites">♥ Favoris</option>
+                  <option value="likes">★ Likes</option>
                   <option value="recent">Récents</option>
                   <option value="year">Année</option>
                   <option value="alpha">A → Z</option>
                 </select>
                 <button className="btn" onClick={() => setShowAdd(true)}>+ Proposer</button>
+                <div style={{ marginLeft: 'auto', fontSize: '0.9rem', color: COLORS.grey }}>
+                  Tes likes : <strong style={{ color: userLikesCount >= MAX_LIKES ? COLORS.red : COLORS.black }}>{userLikesCount}/{MAX_LIKES}</strong>
+                </div>
               </div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Propositions ({filtered.length})</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
-                {filtered.map((f, i) => <VHSCard key={f.id} film={f} index={i} onClick={() => setSelected(f)} onFav={() => fav(f.id)} user={user} />)}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                {filtered.map((f, i) => <VHSCard key={f.id} film={f} index={i} onClick={() => setSelected(f)} onLike={() => like(f.id)} user={user} userLikesCount={userLikesCount} />)}
                 {[...Array(placeholdersCount)].map((_, i) => <VHSPlaceholder key={`p-${i}`} index={filtered.length + i} onClick={() => setShowAdd(true)} />)}
               </div>
             </div>
@@ -792,7 +880,7 @@ const App = () => {
       {tab === 'membres' && <MembresTab films={films} />}
 
       {showAdd && <AddModal onClose={() => setShowAdd(false)} onAdd={add} />}
-      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onVote={() => vote(selected.id)} onFav={() => fav(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} />}
+      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onLike={() => like(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} userLikesCount={userLikesCount} maxLikes={MAX_LIKES} />}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
@@ -840,7 +928,7 @@ const Planning = ({ avail, user, onToggle }) => {
 // Historique
 const Historique = ({ watched, onSelect }) => (
   <section style={{ background: COLORS.cream, padding: '2rem' }}>
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ maxWidth: "90vw", margin: '0 auto' }}>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Films vus ({watched.length})</h2>
       {watched.length > 0 ? watched.map(f => (
         <div key={f.id} onClick={() => onSelect(f)} style={{ display: 'flex', gap: '1rem', padding: '1rem', background: 'white', marginBottom: '0.5rem', cursor: 'pointer' }}>
@@ -856,21 +944,25 @@ const Historique = ({ watched, onSelect }) => (
 // Membres
 const MembresTab = ({ films }) => {
   const membersList = Object.entries(MEMBERS);
-  const stats = (id) => ({ prop: films.filter(f => f.proposedBy === id).length, watched: films.filter(f => f.proposedBy === id && f.status === 'watched').length, favs: films.filter(f => f.proposedBy === id).reduce((a, f) => a + (f.favorites?.length || 0), 0) });
+  const stats = (id) => ({ 
+    prop: films.filter(f => f.proposedBy === id).length, 
+    watched: films.filter(f => f.proposedBy === id && f.status === 'watched').length, 
+    likes: films.filter(f => f.proposedBy === id).reduce((a, f) => a + (f.likes?.length || 0), 0) 
+  });
   const watched = films.filter(f => f.status === 'watched');
   const bestP = membersList.map(([k, m]) => ({ ...m, id: k, w: watched.filter(f => f.proposedBy === k).length })).sort((a, b) => b.w - a.w)[0];
-  const mostActive = membersList.map(([k, m]) => ({ ...m, id: k, v: films.filter(f => f.votes?.includes(k)).length })).sort((a, b) => b.v - a.v)[0];
+  const mostActive = membersList.map(([k, m]) => ({ ...m, id: k, v: films.filter(f => f.likes?.includes(k)).length })).sort((a, b) => b.v - a.v)[0];
 
   return (
     <section style={{ background: COLORS.cream, padding: '2rem' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ maxWidth: '90vw', margin: '0 auto' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Statistiques</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
           {membersList.map(([k, m]) => { const s = stats(k); return (
             <div key={k} style={{ background: 'white', padding: '1.5rem', textAlign: 'center' }}>
               <div style={{ width: 60, height: 60, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.5rem', margin: '0 auto 1rem', background: m.color }}>{m.name[0]}</div>
               <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem' }}>{m.name}</div>
-              <div style={{ color: COLORS.grey, fontSize: '0.9rem', lineHeight: 1.6 }}>{s.prop} proposé{s.prop > 1 ? 's' : ''}<br/>{s.watched} vu{s.watched > 1 ? 's' : ''}<br/>{s.favs} ♥ reçus</div>
+              <div style={{ color: COLORS.grey, fontSize: '0.9rem', lineHeight: 1.6 }}>{s.prop} proposé{s.prop > 1 ? 's' : ''}<br/>{s.watched} vu{s.watched > 1 ? 's' : ''}<br/>{s.likes} ★ reçues</div>
             </div>
           ); })}
         </div>
@@ -878,7 +970,7 @@ const MembresTab = ({ films }) => {
           <h3 style={{ fontSize: '1.2rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Hall of Fame</h3>
           <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
             <div style={{ background: 'white', padding: '1.5rem', textAlign: 'center' }}><div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🎬</div><div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Meilleur goût</div><div style={{ color: COLORS.grey }}>{bestP?.w > 0 ? <><span style={{ color: bestP.color }}>{bestP.name}</span><br/>{bestP.w} film{bestP.w > 1 ? 's' : ''} vu{bestP.w > 1 ? 's' : ''}</> : '—'}</div></div>
-            <div style={{ background: 'white', padding: '1.5rem', textAlign: 'center' }}><div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⚡</div><div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Plus actif</div><div style={{ color: COLORS.grey }}>{mostActive?.v > 0 ? <><span style={{ color: mostActive.color }}>{mostActive.name}</span><br/>{mostActive.v} vote{mostActive.v > 1 ? 's' : ''}</> : '—'}</div></div>
+            <div style={{ background: 'white', padding: '1.5rem', textAlign: 'center' }}><div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⚡</div><div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Plus actif</div><div style={{ color: COLORS.grey }}>{mostActive?.v > 0 ? <><span style={{ color: mostActive.color }}>{mostActive.name}</span><br/>{mostActive.v} like{mostActive.v > 1 ? 's' : ''}</> : '—'}</div></div>
           </div>
         </div>
       </div>
@@ -887,9 +979,9 @@ const MembresTab = ({ films }) => {
 };
 
 // Modal détails
-const DetailModal = ({ film, user, onClose, onVote, onFav, onSchedule, onUnschedule, onWatched, onDelete }) => {
-  const voted = film.votes?.includes(user);
-  const faved = film.favorites?.includes(user);
+const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, onWatched, onDelete, userLikesCount = 0, maxLikes = 6 }) => {
+  const isLiked = film.likes?.includes(user);
+  const canLike = isLiked || userLikesCount < maxLikes;
   const isProposer = film.proposedBy === user;
   const p = getMember(film.proposedBy);
   const [showDate, setShowDate] = React.useState(false);
@@ -908,16 +1000,37 @@ const DetailModal = ({ film, user, onClose, onVote, onFav, onSchedule, onUnsched
           {film.genres && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Genres</div><div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>{film.genres.split(',').map((g, i) => <span key={i} style={{ background: COLORS.black, color: COLORS.cream, padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>{g.trim()}</span>)}</div></div>}
           {film.actors && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Casting</div><div style={{ lineHeight: 1.6 }}>{film.actors}</div></div>}
           {film.status !== 'watched' && (
-            <>
-              <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>♥ Favoris ({film.favorites?.length || 0})</div>{film.favorites?.length > 0 ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>{film.favorites.map(v => <span key={v} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.3rem 0.8rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.9rem' }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(v).color }}></span>{getMember(v).name}</span>)}</div> : <div style={{ color: COLORS.grey }}>—</div>}</div>
-              <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>▲ Votes ({film.votes?.length || 0})</div>{film.votes?.length > 0 ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>{film.votes.map(v => <span key={v} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.3rem 0.8rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.9rem' }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(v).color }}></span>{getMember(v).name}</span>)}</div> : <div style={{ color: COLORS.grey }}>—</div>}</div>
-            </>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>★ Likes ({film.likes?.length || 0})</div>
+              {film.likes?.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {film.likes.map(v => (
+                    <span key={v} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.3rem 0.8rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.9rem' }}>
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(v).color }}></span>
+                      {getMember(v).name}
+                    </span>
+                  ))}
+                </div>
+              ) : <div style={{ color: COLORS.grey }}>—</div>}
+            </div>
           )}
           <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>{film.tmdbId && <a href={`https://www.themoviedb.org/movie/${film.tmdbId}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>TMDB</a>}<a href={`https://www.imdb.com/find/?q=${encodeURIComponent(film.title + ' ' + film.year)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>IMDb</a><a href={`https://www.justwatch.com/fr/recherche?q=${encodeURIComponent(film.title)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>JustWatch</a></div>
           {showDate && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Date de visionnage</div><div style={{ display: 'flex', gap: '0.5rem' }}><input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: '0.5rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit' }} /><button className="btn" onClick={() => onWatched(date)}>Valider</button></div></div>}
         </div>
         <div className="modal-actions">
-          {film.status === 'proposed' && <><button className={`btn ${faved ? '' : 'btn-outline'}`} onClick={onFav}>{faved ? '♥ Favori' : '♡ Favori'}</button><button className={`btn ${voted ? '' : 'btn-outline'}`} onClick={onVote}>{voted ? '✓ Voté' : '▲ Voter'}</button><button className="btn" onClick={onSchedule}>Programmer</button></>}
+          {film.status === 'proposed' && (
+            <>
+              <button 
+                className={`btn ${isLiked ? '' : 'btn-outline'}`} 
+                onClick={onLike}
+                disabled={!canLike}
+                style={{ opacity: canLike ? 1 : 0.5 }}
+              >
+                {isLiked ? '★ Liké' : '☆ Liker'}
+              </button>
+              <button className="btn" onClick={onSchedule}>Programmer</button>
+            </>
+          )}
           {film.status === 'scheduled' && <><button className="btn btn-outline" onClick={onUnschedule}>Déprogrammer</button><button className="btn" onClick={() => setShowDate(true)}>Marquer vu</button></>}
           {(isProposer || film.status === 'watched') && <button className="btn" style={{ background: '#c62828' }} onClick={onDelete}>Supprimer</button>}
         </div>
