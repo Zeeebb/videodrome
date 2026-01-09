@@ -133,8 +133,8 @@ const VHSTape = ({ title }) => {
         viewBox="0 0 274 150" 
         style={{ 
           position: 'absolute',
-          height: '85px',
-          width: 'auto',
+          width: '265px',
+          height: '170px',
           transform: 'rotate(-90deg)',
           transformOrigin: 'center center'
         }}
@@ -305,7 +305,7 @@ const FavSticker = ({ memberId, index }) => {
 const VHSCard = ({ film, index, onClick, onFav, user }) => {
   const [isActive, setIsActive] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
-  const boxWidth = 175, boxHeight = 260, tapeWidth = 90;
+  const boxWidth = 175, boxHeight = 260, tapeWidth = 170;
   const member = getMember(film.proposedBy);
   const isFav = film.favorites?.includes(user);
   
@@ -432,7 +432,7 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
 // VHS Placeholder avec ?
 const VHSPlaceholder = ({ index, onClick }) => {
   const [isActive, setIsActive] = React.useState(false);
-  const boxWidth = 175, boxHeight = 260, tapeWidth = 90;
+  const boxWidth = 175, boxHeight = 260, tapeWidth = 170;
   
   const randomRotation = React.useMemo(() => ((index * 17) % 11) - 5, [index]);
   const randomOffset = React.useMemo(() => ((index * 23) % 20) - 10, [index]);
