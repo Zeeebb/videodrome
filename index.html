@@ -282,13 +282,10 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
           // Encoche trapézoïdale réduite à ~1/5ème (environ 40-52px sur 260px)
           clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)'
         }}>
-          {/* Bande couleur du membre sur le bord gauche */}
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 5, height: '100%', background: member.color, zIndex: 10 }}></div>
-          
           {/* Stickers votes (étoiles) */}
           {film.votes?.map((v, i) => <VoteSticker key={`v-${v}`} memberId={v} index={i} />)}
           
-          {/* Stickers favoris (macarons) - Point 10 */}
+          {/* Stickers favoris (macarons) */}
           {film.favorites?.map((f, i) => <FavSticker key={`f-${f}`} memberId={f} index={i} />)}
           
           {/* Poster */}
@@ -369,55 +366,6 @@ const VHSPlaceholder = ({ index, onClick }) => {
 };
 
 // Mini VHS Card pour la prochaine séance (Point 6)
-const MiniVHSCard = ({ film, onClick }) => {
-  const member = getMember(film?.proposedBy);
-  const boxWidth = 140, boxHeight = 210;
-  
-  if (!film) {
-    return (
-      <div style={{ width: boxWidth, height: boxHeight, background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', position: 'relative' }}>
-        <div style={{ fontSize: '4rem', opacity: 0.3, color: '#fff' }}>?</div>
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, background: `repeating-linear-gradient(90deg, ${COLORS.red} 0px, ${COLORS.red} 8px, transparent 8px, transparent 16px)` }}></div>
-      </div>
-    );
-  }
-  
-  return (
-    <div 
-      style={{ 
-        width: boxWidth, 
-        height: boxHeight, 
-        cursor: 'pointer',
-        position: 'relative',
-      }} 
-      onClick={onClick}
-    >
-      {/* Bande gauche fine */}
-      <div style={{ position: 'absolute', top: 0, left: -2, width: 2, height: '100%', background: `linear-gradient(to bottom, ${COLORS.cream}, #666)`, zIndex: 5 }}></div>
-      {/* Bande haute fine */}
-      <div style={{ position: 'absolute', top: -2, left: -2, width: 'calc(100% + 2px)', height: 2, background: `linear-gradient(to right, ${COLORS.cream}, #666)`, zIndex: 5 }}></div>
-      
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        background: '#000', 
-        overflow: 'hidden',
-        clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)',
-        boxShadow: '5px 5px 15px rgba(0,0,0,0.3)'
-      }}>
-        {/* Bande couleur */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: member.color, zIndex: 10 }}></div>
-        
-        {film.poster ? (
-          <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <VHSPoster title={film.title} />
-        )}
-      </div>
-    </div>
-  );
-};
-
 // App principale
 const App = () => {
   const [user, setUser] = React.useState(() => localStorage.getItem('vd_user') || 'seb');
@@ -534,21 +482,52 @@ const App = () => {
     setAvail(newAvail); save(null, newAvail);
   };
 
-  if (loading) return <div className="loading-screen"><div className="loading-logo">VIDEODROME</div></div>;
+  if (loading) return (
+    <div className="loading-screen">
+      <svg viewBox="0 0 771 92" style={{ height: 50, width: 'auto', fill: '#f5f0e6', animation: 'pulse 1.5s ease infinite' }}>
+        <g transform="translate(0,92) scale(0.1,-0.1)">
+          <path d="M10 900 c-8 -15 -7 -36 4 -81 9 -33 16 -73 16 -89 0 -15 6 -32 13 -37 6 -6 69 -11 139 -11 155 -2 159 2 134 102 -9 34 -16 74 -16 89 0 38 -27 49 -102 38 -35 -5 -76 -5 -93 0 -50 15 -83 11 -95 -11z"/>
+          <path d="M651 911 c-17 -11 -61 -114 -70 -166 -7 -36 -21 -77 -97 -273 -13 -34 -24 -74 -24 -88 0 -34 -20 -116 -33 -131 -15 -21 -47 -15 -56 10 -5 12 -12 78 -16 147 -5 91 -11 130 -23 143 -21 24 -232 26 -256 1 -21 -20 -21 -21 13 -107 18 -46 35 -117 46 -192 9 -66 19 -135 21 -152 3 -18 15 -45 28 -60 22 -26 25 -26 64 -15 25 8 49 9 63 3 13 -4 75 -6 139 -3 129 5 144 12 155 70 4 20 13 49 22 65 8 16 21 54 29 83 7 30 25 76 38 102 13 26 29 65 35 87 7 22 30 76 51 120 22 44 51 120 66 170 19 62 38 100 60 124 l32 35 10 -38 c6 -21 8 -59 5 -85 -4 -33 -1 -50 8 -57 8 -6 51 -14 95 -18 112 -9 122 0 129 113 7 114 0 121 -112 121 -53 0 -94 -5 -111 -14 -24 -12 -30 -12 -47 0 -21 16 -240 20 -264 5z"/>
+          <path d="M1260 903 c-24 -17 -24 -8 -3 -151 4 -27 12 -46 25 -53 11 -6 89 -9 196 -7 161 3 181 1 217 -17 83 -42 102 -111 65 -234 -35 -120 -112 -191 -206 -191 -62 0 -79 15 -70 62 16 82 25 222 15 239 -9 17 -23 19 -119 19 -76 0 -111 -4 -117 -12 -4 -7 -8 -67 -9 -133 0 -66 -5 -178 -11 -250 -14 -153 -11 -160 56 -151 25 4 127 10 226 15 207 10 222 13 291 57 65 42 115 110 145 199 21 63 23 88 24 246 0 140 -3 179 -15 196 -91 125 -98 132 -168 154 -59 19 -94 22 -293 25 -193 2 -229 1 -249 -13z"/>
+          <path d="M2077 906 c-11 -12 -15 -38 -14 -111 0 -53 4 -98 9 -101 11 -7 536 -6 548 1 6 3 10 25 10 49 0 23 7 63 16 89 12 36 13 50 4 67 -11 20 -16 21 -73 14 -73 -8 -416 -8 -456 1 -19 4 -34 1 -44 -9z"/>
+          <path d="M2900 911 c-73 -23 -212 -176 -196 -216 10 -26 56 -38 98 -25 21 6 97 10 170 9 73 0 141 2 150 6 25 10 84 -23 119 -66 28 -35 30 -45 30 -111 -1 -83 -22 -171 -47 -199 -27 -30 -115 -69 -157 -69 -28 0 -49 8 -79 33 -59 47 -69 72 -62 159 6 62 4 76 -13 96 -17 22 -27 24 -123 25 l-104 2 -9 -50 c-5 -32 -4 -65 3 -95 7 -25 16 -69 20 -98 13 -79 91 -205 144 -235 106 -59 264 -77 385 -43 100 28 191 113 210 196 5 25 17 63 26 84 14 32 16 69 13 205 -3 157 -4 169 -30 221 -19 38 -44 68 -82 98 -97 75 -120 82 -291 81 -82 0 -161 -4 -175 -8z"/>
+          <path d="M6729 911 c-5 -1 -23 -28 -39 -60 -127 -253 -144 -277 -175 -251 -17 14 -59 102 -69 143 -7 28 -59 114 -90 150 -14 15 -35 17 -154 17 -94 0 -142 -4 -150 -12 -15 -15 -16 -181 -2 -209 10 -17 21 -19 104 -17 114 2 133 -8 171 -89 15 -32 45 -88 67 -124 21 -37 50 -98 64 -135 28 -80 65 -120 94 -104 11 6 61 93 111 195 51 102 98 185 104 185 31 0 35 -27 30 -186 -3 -88 -11 -205 -16 -261 -14 -144 -4 -158 95 -131 34 9 54 9 82 0 32 -10 42 -9 62 4 23 15 24 19 16 78 -10 77 -11 270 -2 406 10 152 13 388 5 397 -7 7 -288 11 -308 4z"/>
+          <path d="M3567 895 c-12 -12 -13 -22 -6 -48 5 -17 7 -55 3 -83 -10 -82 -5 -84 203 -84 198 0 227 -7 269 -69 21 -32 24 -46 24 -131 0 -92 -1 -97 -35 -147 -38 -56 -62 -72 -138 -93 -37 -10 -54 -10 -74 -1 -25 12 -25 12 -19 99 4 48 9 108 12 133 7 57 -17 92 -62 91 -98 -2 -163 -8 -170 -15 -4 -4 -8 -65 -9 -135 0 -70 -7 -183 -14 -251 -13 -119 -13 -125 5 -138 12 -9 32 -12 54 -9 19 3 87 6 150 7 149 2 267 22 355 60 70 29 72 31 108 102 30 59 39 91 50 182 7 61 13 144 12 185 -2 68 -6 83 -45 153 -46 84 -111 147 -172 165 -46 14 -209 31 -359 37 -106 5 -129 3 -142 -10z"/>
+          <path d="M4342 898 c-8 -8 -12 -45 -12 -100 0 -80 2 -89 23 -102 29 -20 97 -23 287 -13 170 9 203 4 221 -37 15 -31 4 -72 -21 -86 -11 -6 -36 -11 -57 -11 -126 -2 -276 3 -323 10 -94 16 -96 12 -98 -175 -1 -88 -5 -199 -11 -249 -11 -113 -4 -131 47 -119 21 4 72 8 114 8 102 1 105 4 90 109 -25 176 -12 247 48 247 35 0 68 -41 181 -225 63 -103 95 -135 139 -135 19 0 50 4 69 10 23 6 48 6 78 -2 37 -9 47 -8 60 4 13 14 13 19 0 44 -8 16 -27 40 -42 54 -15 14 -34 39 -42 55 -15 29 -29 47 -118 153 -38 44 -43 56 -35 72 6 11 22 23 35 26 37 9 71 56 96 133 22 67 22 69 4 134 -19 71 -53 115 -127 165 -32 20 -55 26 -140 32 -56 4 -120 3 -142 -1 -23 -4 -95 -4 -161 1 -153 12 -149 12 -163 -2z"/>
+          <path d="M5355 895 c-83 -19 -128 -48 -163 -105 -37 -59 -41 -97 -13 -108 11 -4 100 -4 198 -1 157 5 184 4 227 -12 118 -44 163 -101 152 -195 -10 -89 -47 -159 -103 -195 -45 -28 -53 -30 -117 -26 -65 4 -72 7 -102 40 -40 43 -65 124 -63 196 3 61 -3 67 -75 75 -65 8 -126 -7 -149 -36 -22 -26 -17 -97 13 -214 29 -109 53 -154 112 -212 45 -44 65 -55 126 -72 109 -30 218 -27 310 10 91 35 128 61 168 114 69 92 95 181 99 345 4 138 -10 186 -84 277 -62 77 -99 100 -189 119 -84 17 -273 18 -347 0z"/>
+          <path d="M7285 900 l-160 -5 -3 -104 c-1 -59 2 -109 7 -114 6 -6 119 -10 282 -11 315 -1 282 -16 293 131 5 69 4 93 -6 100 -15 9 -181 10 -413 3z"/>
+          <path d="M941 566 c-9 -11 -12 -31 -8 -61 4 -25 0 -114 -8 -198 -19 -192 -19 -251 -1 -266 18 -15 195 -6 213 11 9 9 14 71 18 207 3 106 10 212 14 234 16 70 12 72 -125 82 -76 6 -92 4 -103 -9z"/>
+          <path d="M2076 547 c-3 -12 -7 -78 -10 -147 -3 -69 -13 -163 -21 -210 -28 -159 -33 -154 137 -149 166 4 242 2 341 -12 67 -9 82 -8 103 6 22 14 24 22 24 100 0 120 1 119 -175 111 -176 -9 -195 -3 -195 55 0 71 15 79 130 72 72 -4 99 -3 105 7 10 17 7 148 -5 170 -9 16 -28 18 -220 18 -209 1 -210 1 -214 -21z"/>
+          <path d="M6072 544 c-21 -14 -22 -21 -22 -167 0 -84 -5 -190 -10 -236 -6 -45 -8 -91 -5 -101 9 -27 50 -36 145 -30 l85 5 11 35 c8 22 11 113 10 254 -3 215 -3 219 -25 238 -30 24 -155 26 -189 2z"/>
+          <path d="M7134 538 c-7 -11 -10 -80 -15 -336 -3 -151 -2 -165 15 -178 28 -20 544 -14 557 7 8 13 14 98 12 163 -1 16 -7 33 -15 38 -7 5 -58 6 -118 2 -153 -9 -179 -8 -201 12 -25 23 -25 75 1 99 20 18 27 18 127 -1 24 -5 36 -1 52 15 19 19 21 29 15 84 -11 109 -2 104 -228 105 -127 0 -198 -3 -202 -10z"/>
+        </g>
+      </svg>
+    </div>
+  );
 
   const placeholdersCount = Math.max(0, 6 - filtered.length);
 
   return (
     <div>
-      {/* Header avec dents transparentes */}
+      {/* Header */}
       <header style={{ background: COLORS.black, padding: '1.5rem 0 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1200, margin: '0 auto', padding: '0 2rem' }}>
-          {/* Logo avec bandes colorées verticales à gauche */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {/* Bandes colorées verticales */}
-            <div style={{ display: 'flex', gap: 0, height: 38 }}>
+          {/* Logo avec bandes colorées horizontales qui vont du bord gauche jusqu'au logo */}
+          <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+            {/* Bandes colorées horizontales - du bord gauche de l'écran jusqu'au logo */}
+            <div style={{ 
+              position: 'absolute', 
+              right: '100%', 
+              top: '50%', 
+              transform: 'translateY(-50%)',
+              display: 'flex', 
+              flexDirection: 'column',
+              gap: 0,
+              marginRight: '0.5rem',
+              width: '100vw'
+            }}>
               {Object.entries(MEMBERS).map(([k, m]) => (
-                <div key={k} style={{ width: 8, height: '100%', background: m.color }}></div>
+                <div key={k} style={{ width: '100%', height: 6, background: m.color }}></div>
               ))}
             </div>
             
@@ -580,10 +559,34 @@ const App = () => {
 
       {tab === 'propositions' && (
         <>
-          {/* Hero - Prochaine séance avec MiniVHSCard (Point 6) */}
+          {/* Hero - Prochaine séance */}
           <section style={{ background: COLORS.cream, padding: '2rem' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
-              <MiniVHSCard film={scheduled} onClick={() => scheduled && setSelected(scheduled)} />
+              {/* Poster simple */}
+              <div 
+                style={{ 
+                  width: 140, 
+                  height: 210, 
+                  background: '#000', 
+                  flexShrink: 0,
+                  cursor: scheduled ? 'pointer' : 'default',
+                  overflow: 'hidden',
+                  boxShadow: '5px 5px 15px rgba(0,0,0,0.3)'
+                }} 
+                onClick={() => scheduled && setSelected(scheduled)}
+              >
+                {scheduled ? (
+                  scheduled.poster ? (
+                    <img src={scheduled.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <VHSPoster title={scheduled.title} />
+                  )
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '4rem', opacity: 0.3, color: '#fff' }}>?</div>
+                  </div>
+                )}
+              </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'inline-block', background: COLORS.red, color: COLORS.cream, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', padding: '0.4rem 0.8rem', transform: 'rotate(-3deg)', marginBottom: '1rem' }}>PROCHAINE SÉANCE</div>
                 {scheduled ? (
