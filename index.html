@@ -105,34 +105,49 @@ const VHSPoster = ({ title }) => (
   </div>
 );
 
-// Cassette VHS SVG avec titre vertical sur l'étiquette
-const VHSTape = ({ title }) => (
-  <svg viewBox="0 0 90 260" style={{ width: '100%', height: '100%' }}>
-    <rect x="0" y="0" width="90" height="260" rx="4" fill="#1a1a1a"/>
-    <defs>
-      <pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse">
-        <path d="M 5 0 L 0 0 0 5" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="0.5"/>
-      </pattern>
-    </defs>
-    <rect x="0" y="0" width="90" height="260" rx="4" fill="url(#grid)"/>
-    <rect x="87" y="0" width="3" height="260" fill="rgba(255,255,255,0.15)" rx="0 4 4 0"/>
-    <circle cx="45" cy="45" r="28" fill="#222" stroke="#333" strokeWidth="3"/>
-    <circle cx="45" cy="45" r="18" fill="#2a2a2a" stroke="#222" strokeWidth="2"/>
-    <circle cx="45" cy="45" r="8" fill="#1a1a1a"/>
-    <circle cx="45" cy="45" r="23" fill="none" stroke="#3a3a3a" strokeWidth="1" strokeDasharray="4 4"/>
-    <rect x="12" y="85" width="66" height="90" rx="3" fill="#f5f5f0"/>
-    <rect x="12" y="85" width="66" height="90" rx="3" fill="none" stroke="#ddd" strokeWidth="1"/>
-    <text x="45" y="130" textAnchor="middle" dominantBaseline="middle" transform="rotate(-90, 45, 130)" style={{ fontSize: '9px', fontWeight: 700, fill: '#222', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'Arial, sans-serif' }}>
-      {title && title.length > 20 ? title.substring(0, 20) + '...' : title}
-    </text>
-    <line x1="18" y1="95" x2="72" y2="95" stroke="#ccc" strokeWidth="1"/>
-    <line x1="18" y1="165" x2="72" y2="165" stroke="#ccc" strokeWidth="1"/>
-    <circle cx="45" cy="215" r="28" fill="#f0f0f0" stroke="#ccc" strokeWidth="3"/>
-    <circle cx="45" cy="215" r="18" fill="#e8e8e8" stroke="#ddd" strokeWidth="2"/>
-    <circle cx="45" cy="215" r="8" fill="#ccc"/>
-    <circle cx="45" cy="215" r="23" fill="none" stroke="#ddd" strokeWidth="1" strokeDasharray="4 4"/>
-  </svg>
-);
+// Cassette VHS SVG (nouveau design)
+const VHSTape = ({ title }) => {
+  // Calcul de la taille de police adaptative pour que le titre rentre
+  const getFontSize = (text) => {
+    if (!text) return 10;
+    if (text.length <= 10) return 11;
+    if (text.length <= 15) return 9;
+    if (text.length <= 20) return 8;
+    if (text.length <= 30) return 7;
+    return 6;
+  };
+  
+  return (
+    <svg viewBox="0 0 487 267" style={{ width: '100%', height: '100%', display: 'block' }}>
+      {/* Corps noir */}
+      <rect x="0" y="0" width="487" height="267" fill="#000"/>
+      {/* Corps gris foncé */}
+      <path d="M50 73 C210.71 73 371.42 73 537 73 C537 161.11 537 249.22 537 340 C376.29 340 215.58 340 50 340 C50 251.89 50 163.78 50 73 Z" transform="translate(-50,-73)" fill="#343434"/>
+      {/* Zone blanche étiquette */}
+      <rect x="141" y="85" width="206" height="117" rx="2" fill="#F9F9F9"/>
+      {/* Titre sur l'étiquette - adaptatif */}
+      <text 
+        x="244" 
+        y="143" 
+        textAnchor="middle" 
+        dominantBaseline="middle"
+        style={{ 
+          fontSize: `${getFontSize(title)}px`, 
+          fontWeight: 700, 
+          fill: '#1a1a1a', 
+          textTransform: 'uppercase',
+          fontFamily: 'Arial, sans-serif'
+        }}
+      >
+        {title && title.length > 35 ? title.substring(0, 35) + '...' : title}
+      </text>
+      {/* Bande noire en haut */}
+      <rect x="8" y="29" width="470" height="44" fill="#020202"/>
+      {/* Détails bas */}
+      <rect x="8" y="221" width="470" height="46" fill="#020202"/>
+    </svg>
+  );
+};
 
 // Sticker étoile 12 branches pour les votes
 const generateStarPath = (cx, cy, outerR, innerR, points) => {
@@ -200,7 +215,7 @@ const FavSticker = ({ memberId, index }) => {
 const VHSCard = ({ film, index, onClick, onFav, user }) => {
   const [isActive, setIsActive] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
-  const boxWidth = 175, boxHeight = 260, tapeWidth = 90;
+  const boxWidth = 175, boxHeight = 260, tapeWidth = 95;
   const member = getMember(film.proposedBy);
   const isFav = film.favorites?.includes(user);
   
@@ -230,12 +245,11 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
         position: 'relative', 
         width: boxWidth, 
         height: boxHeight, 
-        // Zoom 40% centré + rotation aléatoire quand pas actif
         transform: isActive ? 'scale(1.40)' : `scale(1) rotate(${randomRotation}deg)`, 
         transformOrigin: 'center center',
         transition: 'transform 0.4s ease',
       }}>
-        {/* Cassette qui sort à 65% par la droite */}
+        {/* Cassette qui sort à 65% par la droite avec shadow de la boite */}
         <div style={{ 
           position: 'absolute', 
           top: 0, 
@@ -244,34 +258,13 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
           height: boxHeight, 
           transition: 'right 0.4s ease', 
           zIndex: -1, 
-          pointerEvents: 'none' 
+          pointerEvents: 'none',
+          filter: 'drop-shadow(-8px 0 10px rgba(0,0,0,0.4))'
         }}>
           <VHSTape title={film.title} />
         </div>
         
-        {/* Bande gauche fine dégradé Crème -> Gris */}
-        <div style={{ 
-          position: 'absolute', 
-          top: 0, 
-          left: -2, 
-          width: 2, 
-          height: '100%', 
-          background: `linear-gradient(to bottom, ${COLORS.cream}, #666)`,
-          zIndex: 5
-        }}></div>
-        
-        {/* Bande haute fine dégradé Crème -> Gris */}
-        <div style={{ 
-          position: 'absolute', 
-          top: -2, 
-          left: -2, 
-          width: 'calc(100% + 2px)', 
-          height: 2, 
-          background: `linear-gradient(to right, ${COLORS.cream}, #666)`,
-          zIndex: 5
-        }}></div>
-        
-        {/* Boîtier principal avec encoche réduite (1/5ème) */}
+        {/* Boîtier principal avec encoche */}
         <div style={{ 
           position: 'absolute', 
           width: '100%', 
@@ -279,7 +272,6 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
           background: '#000', 
           boxShadow: isActive ? '0 25px 50px rgba(0,0,0,0.5)' : '8px 8px 20px rgba(0,0,0,0.3)', 
           overflow: 'hidden',
-          // Encoche trapézoïdale réduite à ~1/5ème (environ 40-52px sur 260px)
           clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)'
         }}>
           {/* Stickers votes (étoiles) */}
@@ -288,10 +280,50 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
           {/* Stickers favoris (macarons) */}
           {film.favorites?.map((f, i) => <FavSticker key={`f-${f}`} memberId={f} index={i} />)}
           
-          {/* Poster */}
-          {film.poster ? <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <VHSPoster title={film.title} />}
+          {/* Poster éclairci de 3% */}
+          {film.poster ? (
+            <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(1.03)' }} />
+          ) : (
+            <VHSPoster title={film.title} />
+          )}
           
-          {/* Bouton favori - seulement visible au hover (Point 11) */}
+          {/* Reflet subtil gauche->droite (5% opacité) */}
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            width: '100%', 
+            height: '100%', 
+            background: 'linear-gradient(to right, rgba(255,255,255,0.05), transparent 50%)',
+            pointerEvents: 'none',
+            zIndex: 15
+          }}></div>
+          
+          {/* Rimlight gauche - SUR la boite, crème -> transparent */}
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            width: 1, 
+            height: '100%', 
+            background: `linear-gradient(to bottom, ${COLORS.cream}, transparent)`,
+            zIndex: 25,
+            pointerEvents: 'none'
+          }}></div>
+          
+          {/* Rimlight haut - SUR la boite, crème -> transparent */}
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            width: '100%', 
+            height: 1, 
+            background: `linear-gradient(to right, ${COLORS.cream}, transparent)`,
+            zIndex: 25,
+            pointerEvents: 'none'
+          }}></div>
+          
+          {/* Bouton favori - seulement visible au hover */}
           {isActive && (
             <button onClick={(e) => { e.stopPropagation(); onFav(); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '50%', width: 36, height: 36, fontSize: '1.1rem', cursor: 'pointer', zIndex: 30, transition: 'transform 0.2s' }}>{isFav ? '❤️' : '🤍'}</button>
           )}
@@ -310,7 +342,7 @@ const VHSCard = ({ film, index, onClick, onFav, user }) => {
 // VHS Placeholder avec ?
 const VHSPlaceholder = ({ index, onClick }) => {
   const [isActive, setIsActive] = React.useState(false);
-  const boxWidth = 175, boxHeight = 260, tapeWidth = 90;
+  const boxWidth = 175, boxHeight = 260, tapeWidth = 95;
   
   const randomRotation = React.useMemo(() => ((index * 17) % 11) - 5, [index]);
   const randomOffset = React.useMemo(() => ((index * 23) % 20) - 10, [index]);
@@ -336,9 +368,6 @@ const VHSPlaceholder = ({ index, onClick }) => {
         transformOrigin: 'center center',
         transition: 'transform 0.4s ease',
       }}>
-        <div style={{ position: 'absolute', top: 0, left: -2, width: 2, height: '100%', background: 'linear-gradient(to bottom, #888, #444)' }}></div>
-        <div style={{ position: 'absolute', top: -2, left: -2, width: 'calc(100% + 2px)', height: 2, background: 'linear-gradient(to right, #888, #444)' }}></div>
-        
         <div style={{ 
           position: 'absolute', 
           width: '100%', 
@@ -352,7 +381,11 @@ const VHSPlaceholder = ({ index, onClick }) => {
           justifyContent: 'center',
           clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)'
         }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 5, height: '100%', background: '#444', zIndex: 10 }}></div>
+          {/* Rimlight gauche */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 1, height: '100%', background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)', zIndex: 25 }}></div>
+          {/* Rimlight haut */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 1, background: 'linear-gradient(to right, rgba(255,255,255,0.3), transparent)', zIndex: 25 }}></div>
+          
           <div style={{ fontSize: '5rem', color: '#333', fontWeight: 700 }}>?</div>
           <div style={{ position: 'absolute', top: '20%', left: '10%', right: '10%', height: 2, background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
           <div style={{ position: 'absolute', top: '35%', left: '15%', right: '15%', height: 2, background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
@@ -510,24 +543,24 @@ const App = () => {
   return (
     <div>
       {/* Header */}
-      <header style={{ background: COLORS.black, padding: '1.5rem 0 0', position: 'sticky', top: 0, zIndex: 100 }}>
+      <header style={{ background: COLORS.black, padding: '1.5rem 0 0', position: 'sticky', top: 0, zIndex: 100, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1200, margin: '0 auto', padding: '0 2rem' }}>
           {/* Logo avec bandes colorées horizontales qui vont du bord gauche jusqu'au logo */}
           <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-            {/* Bandes colorées horizontales - du bord gauche de l'écran jusqu'au logo */}
+            {/* Bandes colorées horizontales - du bord gauche de l'écran jusqu'au logo, même hauteur (38px) */}
             <div style={{ 
               position: 'absolute', 
               right: '100%', 
-              top: '50%', 
-              transform: 'translateY(-50%)',
+              top: 0,
               display: 'flex', 
               flexDirection: 'column',
               gap: 0,
-              marginRight: '0.5rem',
-              width: '100vw'
+              marginRight: 0,
+              width: '100vw',
+              height: 38
             }}>
               {Object.entries(MEMBERS).map(([k, m]) => (
-                <div key={k} style={{ width: '100%', height: 6, background: m.color }}></div>
+                <div key={k} style={{ width: '100%', flex: 1, background: m.color }}></div>
               ))}
             </div>
             
@@ -559,35 +592,16 @@ const App = () => {
 
       {tab === 'propositions' && (
         <>
-          {/* Hero - Prochaine séance */}
+          {/* Hero - Prochaine séance avec VHSCard */}
           <section style={{ background: COLORS.cream, padding: '2rem' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
-              {/* Poster simple */}
-              <div 
-                style={{ 
-                  width: 140, 
-                  height: 210, 
-                  background: '#000', 
-                  flexShrink: 0,
-                  cursor: scheduled ? 'pointer' : 'default',
-                  overflow: 'hidden',
-                  boxShadow: '5px 5px 15px rgba(0,0,0,0.3)'
-                }} 
-                onClick={() => scheduled && setSelected(scheduled)}
-              >
-                {scheduled ? (
-                  scheduled.poster ? (
-                    <img src={scheduled.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <VHSPoster title={scheduled.title} />
-                  )
-                ) : (
-                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ fontSize: '4rem', opacity: 0.3, color: '#fff' }}>?</div>
-                  </div>
-                )}
-              </div>
-              <div style={{ flex: 1 }}>
+              {/* VHSCard ou Placeholder */}
+              {scheduled ? (
+                <VHSCard film={scheduled} index={99} onClick={() => setSelected(scheduled)} onFav={() => fav(scheduled.id)} user={user} />
+              ) : (
+                <VHSPlaceholder index={99} onClick={() => setShowAdd(true)} />
+              )}
+              <div style={{ flex: 1, paddingTop: '1rem' }}>
                 <div style={{ display: 'inline-block', background: COLORS.red, color: COLORS.cream, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', padding: '0.4rem 0.8rem', transform: 'rotate(-3deg)', marginBottom: '1rem' }}>PROCHAINE SÉANCE</div>
                 {scheduled ? (
                   <>
