@@ -56,23 +56,33 @@
     
     /* Mobile responsive */
     @media (max-width: 768px) {
-      .header-right { flex-direction: column; gap: 0.5rem !important; align-items: flex-end !important; }
-      .header-stats { font-size: 0.75rem !important; }
-      .nav-tabs { gap: 0.25rem !important; }
-      .nav-tabs button { padding: 0.5rem 0.75rem !important; font-size: 0.8rem !important; }
-      .propositions-controls { flex-direction: column; align-items: stretch !important; }
-      .propositions-controls .search-box { min-width: 100% !important; }
-      .likes-counter { text-align: right; }
-      .films-grid { justify-content: center; }
-      .modal { max-width: 100%; margin: 0.5rem; }
-      .modal-head { padding: 1rem; }
-      .modal-body { padding: 1rem; }
-      .modal-actions { padding: 1rem; flex-direction: column; }
-      .modal-actions button { width: 100%; }
+      .header-right { flex-direction: row; gap: 0.5rem !important; align-items: center !important; }
+      .header-stats { font-size: 0.7rem !important; display: none; }
+      .nav-tabs { gap: 0 !important; justify-content: space-around; }
+      .nav-tabs button { padding: 0.5rem 0.75rem !important; font-size: 0.75rem !important; flex: 1; text-align: center; }
+      .propositions-controls { flex-direction: row; flex-wrap: wrap; align-items: center !important; gap: 0.5rem !important; }
+      .propositions-controls .search-box { flex: 1 1 100px !important; min-width: 80px !important; padding: 0.5rem !important; font-size: 0.85rem !important; }
+      .likes-counter { font-size: 0.8rem !important; }
+      .films-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 0.25rem !important; justify-items: center; }
+      .vhs-card { transform: scale(0.55) !important; transform-origin: top left !important; margin-bottom: -120px !important; margin-right: -85px !important; }
+      .detail-modal { max-width: calc(100vw - 1rem) !important; max-height: 90vh !important; margin: 0.5rem !important; }
+      .detail-modal .detail-top { flex-direction: column !important; align-items: center !important; text-align: center !important; }
+      .detail-modal .detail-poster { width: 100px !important; }
+      .modal { max-width: calc(100vw - 1rem); margin: 0.5rem; }
+      .modal-head { padding: 0.75rem; }
+      .modal-body { padding: 0.75rem; }
+      .modal-actions { padding: 0.75rem; flex-direction: column; gap: 0.5rem; }
+      .modal-actions button { width: 100%; padding: 0.6rem !important; font-size: 0.85rem !important; }
+      .hero-section { padding: 1rem !important; }
+      .hero-section > div { flex-direction: column !important; align-items: center !important; text-align: center !important; }
+      .planning-grid { font-size: 0.8rem; }
     }
     
     @media (max-width: 480px) {
-      .nav-tabs button { padding: 0.4rem 0.5rem !important; font-size: 0.7rem !important; }
+      .nav-tabs button { padding: 0.4rem 0.3rem !important; font-size: 0.65rem !important; }
+      .vhs-card { transform: scale(0.48) !important; margin-bottom: -140px !important; margin-right: -100px !important; }
+      .propositions-controls select { padding: 0.4rem 0.5rem !important; font-size: 0.8rem !important; }
+      .propositions-controls .btn { padding: 0.4rem 0.6rem !important; font-size: 0.8rem !important; }
     }
   </style>
 </head>
@@ -191,9 +201,7 @@ const VHSTape = ({ title }) => {
       position: 'relative',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: '1rem',
-      overflow: 'hidden'
+      justifyContent: 'center'
     }}>
       <svg 
         viewBox="0 0 274 150" 
@@ -362,6 +370,7 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
   
   return (
     <div 
+      className="vhs-card"
       style={{ 
         width: boxWidth + tapeWidth * 0.7, 
         height: boxHeight + 30, 
@@ -392,12 +401,14 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           transition: 'right 0.4s ease', 
           zIndex: -1, 
           pointerEvents: 'none',
-          filter: 'drop-shadow(-8px 0 10px rgba(0,0,0,0.4))'
+          filter: 'drop-shadow(-8px 0 10px rgba(0,0,0,0.4))',
+          borderRadius: '0.5rem',
+          overflow: 'hidden'
         }}>
           <VHSTape title={film.title} />
         </div>
         
-        {/* Boîtier principal avec encoche et coins arrondis */}
+        {/* Boîtier principal avec encoche */}
         <div style={{ 
           position: 'absolute', 
           width: '100%', 
@@ -405,7 +416,6 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           background: '#000', 
           boxShadow: isActive ? '0 25px 50px rgba(0,0,0,0.5)' : '8px 8px 20px rgba(0,0,0,0.3)', 
           overflow: 'hidden',
-          borderRadius: '0.5rem',
           clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)'
         }}>
           {/* Stickers likes (étoiles) - en bas à droite */}
@@ -488,6 +498,7 @@ const VHSPlaceholder = ({ index, onClick, isEmpty = false }) => {
   
   return (
     <div 
+      className="vhs-card"
       style={{ 
         width: boxWidth + tapeWidth * 0.7, 
         height: boxHeight + 30, 
@@ -518,7 +529,6 @@ const VHSPlaceholder = ({ index, onClick, isEmpty = false }) => {
           flexDirection: 'column', 
           alignItems: 'center', 
           justifyContent: 'center',
-          borderRadius: '0.5rem',
           clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)'
         }}>
           {/* Rimlight gauche */}
@@ -970,7 +980,14 @@ const App = () => {
     if (!confirm('Supprimer ce film ?')) return;
     const newFilms = films.filter(f => f.id !== id);
     setFilms(newFilms); save(newFilms); setSelected(null);
-    notify('Film supprimé');
+    notify('Film supprime');
+  };
+
+  const changePoster = (id, newPosterUrl) => {
+    const newFilms = films.map(f => f.id === id ? { ...f, poster: newPosterUrl } : f);
+    setFilms(newFilms); save(newFilms);
+    if (selected?.id === id) setSelected({ ...selected, poster: newPosterUrl });
+    notify('Affiche modifiee');
   };
 
   const toggleAvail = (date) => {
@@ -1015,8 +1032,8 @@ const App = () => {
     </div>
   );
 
-  // Popup de sélection utilisateur
-  if (showUserSelect) return <UserSelectModal onSelect={selectUser} />;
+  // Popup de sélection utilisateur (après le loading)
+  if (showUserSelect && !loading) return <UserSelectModal onSelect={selectUser} />;
 
   const placeholdersCount = Math.max(0, 6 - filtered.length);
 
@@ -1049,11 +1066,14 @@ const App = () => {
             </div>
           </div>
           
-          <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <select value={user || ''} onChange={e => setUser(e.target.value)} style={{ background: 'transparent', border: `2px solid ${COLORS.cream}`, color: COLORS.cream, padding: '0.5rem 1rem', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer' }}>
-              {Object.entries(MEMBERS).map(([k, m]) => <option key={k} value={k} style={{ background: COLORS.black }}>{m.name}</option>)}
-            </select>
-            <div className="header-stats" style={{ color: COLORS.grey, fontSize: '0.9rem' }}>{proposed.length} films · {watched.length} vus{syncing && <span className="sync-icon"> ...</span>}</div>
+          <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(user || 'seb').color }}></span>
+              <select value={user || ''} onChange={e => setUser(e.target.value)} style={{ background: 'transparent', border: `2px solid ${COLORS.cream}`, color: COLORS.cream, padding: '0.4rem 0.75rem', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
+                {Object.entries(MEMBERS).map(([k, m]) => <option key={k} value={k} style={{ background: COLORS.black }}>{m.name}</option>)}
+              </select>
+            </div>
+            <div className="header-stats" style={{ color: COLORS.grey, fontSize: '0.85rem' }}>{proposed.length} films · {watched.length} vus{syncing && <span className="sync-icon"> ...</span>}</div>
           </div>
         </div>
         
@@ -1175,7 +1195,7 @@ const App = () => {
       {tab === 'membres' && <MembresTab films={films} />}
 
       {showAdd && <AddModal onClose={() => setShowAdd(false)} onAdd={add} />}
-      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onLike={() => like(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} userLikesCount={userLikesCount} maxLikes={MAX_LIKES} />}
+      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onLike={() => like(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} onChangePoster={(url) => changePoster(selected.id, url)} userLikesCount={userLikesCount} maxLikes={MAX_LIKES} />}
       {showWheel && finalists.length >= 2 && <WheelModal films={finalists} onClose={() => setShowWheel(false)} onResult={wheelResult} />}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
@@ -1194,27 +1214,27 @@ const Planning = ({ avail, user, onToggle }) => {
   const best = Object.entries(avail).filter(([d]) => new Date(d) >= today).map(([d, u]) => ({ d, u, c: u.length })).sort((a, b) => b.c - a.c).slice(0, 5);
 
   return (
-    <section style={{ background: COLORS.cream, padding: '2rem' }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem' }}>Tes disponibilités</h2>
+    <section style={{ background: COLORS.cream, padding: '1.5rem 1rem' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Tes disponibilites</h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>←</button>
-          <div style={{ fontWeight: 700, fontSize: '1.1rem', textTransform: 'capitalize' }}>{mName}</div>
-          <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>→</button>
+          <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} style={{ padding: '0.5rem 1rem' }}>←</button>
+          <div style={{ fontWeight: 700, fontSize: '1rem', textTransform: 'capitalize' }}>{mName}</div>
+          <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} style={{ padding: '0.5rem 1rem' }}>→</button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, background: 'white', padding: '1rem' }}>
-          {['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d => <div key={d} style={{ textAlign: 'center', fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, padding: '0.5rem' }}>{d}</div>)}
-          {days.map((date, i) => { if (!date) return <div key={`e${i}`} />; const k = date.toISOString().split('T')[0]; const members = avail[k] || []; const isA = members.includes(user); const past = date < today; return <div key={k} onClick={() => !past && onToggle(date)} style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: past ? 'default' : 'pointer', border: '2px solid transparent', background: isA ? COLORS.red : 'transparent', color: isA ? COLORS.cream : COLORS.black, opacity: past ? 0.3 : 1 }}><div style={{ fontWeight: 700 }}>{date.getDate()}</div>{members.length > 0 && <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{members.length}</div>}</div>; })}
+        <div className="planning-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, background: 'white', padding: '0.75rem' }}>
+          {['L','M','M','J','V','S','D'].map((d, i) => <div key={i} style={{ textAlign: 'center', fontWeight: 700, fontSize: '0.7rem', color: COLORS.grey, padding: '0.3rem' }}>{d}</div>)}
+          {days.map((date, i) => { if (!date) return <div key={`e${i}`} />; const k = date.toISOString().split('T')[0]; const members = avail[k] || []; const isA = members.includes(user); const past = date < today; return <div key={k} onClick={() => !past && onToggle(date)} style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: past ? 'default' : 'pointer', border: '2px solid transparent', background: isA ? COLORS.red : 'transparent', color: isA ? COLORS.cream : COLORS.black, opacity: past ? 0.3 : 1, fontSize: '0.85rem' }}><div style={{ fontWeight: 700 }}>{date.getDate()}</div>{members.length > 0 && <div style={{ fontSize: '0.6rem', opacity: 0.8 }}>{members.length}</div>}</div>; })}
         </div>
-        <div style={{ marginTop: '2rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Meilleures dates</h3>
+        <div style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.75rem' }}>Meilleures dates</h3>
           {best.length > 0 ? best.map(({ d, u }) => (
-            <div key={d} style={{ display: 'flex', gap: '1rem', padding: '0.75rem', background: 'white', marginBottom: '0.5rem', alignItems: 'center' }}>
-              <div style={{ fontWeight: 700, minWidth: 120 }}>{formatDate(d)}</div>
-              <div style={{ flex: 1, display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>{u.map(x => <span key={x} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.2rem 0.5rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.85rem' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: getMember(x).color }}></span>{getMember(x).name}</span>)}</div>
-              <div style={{ fontWeight: 700, color: COLORS.red }}>{u.length}/5</div>
+            <div key={d} style={{ display: 'flex', gap: '0.75rem', padding: '0.5rem', background: 'white', marginBottom: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ fontWeight: 700, minWidth: 100, fontSize: '0.85rem' }}>{formatDate(d)}</div>
+              <div style={{ flex: 1, display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>{u.map(x => <span key={x} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '0.15rem 0.4rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.75rem' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: getMember(x).color }}></span>{getMember(x).name}</span>)}</div>
+              <div style={{ fontWeight: 700, color: COLORS.red, fontSize: '0.85rem' }}>{u.length}/5</div>
             </div>
-          )) : <div style={{ color: COLORS.grey }}>Pas encore de disponibilités</div>}
+          )) : <div style={{ color: COLORS.grey, fontSize: '0.9rem' }}>Pas encore de disponibilites</div>}
         </div>
       </div>
     </section>
@@ -1275,43 +1295,53 @@ const MembresTab = ({ films }) => {
 };
 
 // Modal détails
-const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, onWatched, onDelete, userLikesCount = 0, maxLikes = 6 }) => {
+const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, onWatched, onDelete, onChangePoster, userLikesCount = 0, maxLikes = 6 }) => {
   const isLiked = film.likes?.includes(user);
   const canLike = isLiked || userLikesCount < maxLikes;
   const isProposer = film.proposedBy === user;
   const p = getMember(film.proposedBy);
   const [showDate, setShowDate] = React.useState(false);
+  const [showPosterPicker, setShowPosterPicker] = React.useState(false);
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
+  const showOriginalTitle = film.originalTitle && film.originalTitle !== film.title;
 
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-head"><div style={{ fontWeight: 700, fontSize: '1.2rem' }}>Détails</div><button className="modal-close" onClick={onClose}>×</button></div>
+      <div className="modal detail-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head"><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Details</div><button className="modal-close" onClick={onClose}>×</button></div>
         <div className="modal-body">
-          <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: 200, flexShrink: 0 }}>{film.poster ? <img src={film.poster} alt="" style={{ width: '100%' }} /> : <div style={{ width: '100%', aspectRatio: '2/3', background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: COLORS.grey }}>VHS</div>}</div>
-            <div><div style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: 1.1, marginBottom: '0.5rem' }}>{film.title}</div><div style={{ color: COLORS.grey, marginBottom: '0.75rem' }}>{film.year} · {film.director}{film.runtime ? ` · ${film.runtime} min` : ''}</div><div style={{ display: 'inline-block', padding: '0.3rem 0.8rem', color: 'white', fontWeight: 700, fontSize: '0.85rem', background: p.color }}>Proposé par {p.name}</div></div>
+          <div className="detail-top" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="detail-poster" style={{ width: 120, flexShrink: 0 }}>
+              {film.poster ? <img src={film.poster} alt="" style={{ width: '100%' }} /> : <div style={{ width: '100%', aspectRatio: '2/3', background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: COLORS.grey }}>VHS</div>}
+              {film.tmdbId && <button onClick={(e) => { e.stopPropagation(); setShowPosterPicker(true); }} style={{ width: '100%', marginTop: '0.5rem', padding: '0.3rem', background: 'transparent', border: `1px solid ${COLORS.grey}`, color: COLORS.grey, fontSize: '0.7rem', cursor: 'pointer' }}>Changer l'affiche</button>}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '1.3rem', fontWeight: 700, lineHeight: 1.1, marginBottom: '0.25rem' }}>{film.title}</div>
+              {showOriginalTitle && <div style={{ fontSize: '0.9rem', color: COLORS.grey, fontStyle: 'italic', marginBottom: '0.5rem' }}>{film.originalTitle}</div>}
+              <div style={{ color: COLORS.grey, marginBottom: '0.5rem', fontSize: '0.85rem' }}>{film.year} · {film.director}{film.runtime ? ` · ${film.runtime} min` : ''}</div>
+              <div style={{ display: 'inline-block', padding: '0.2rem 0.5rem', color: 'white', fontWeight: 700, fontSize: '0.75rem', background: p.color }}>Par {p.name}</div>
+            </div>
           </div>
-          {film.overview && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Synopsis</div><div style={{ lineHeight: 1.6 }}>{film.overview}</div></div>}
-          {film.genres && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Genres</div><div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>{film.genres.split(',').map((g, i) => <span key={i} style={{ background: COLORS.black, color: COLORS.cream, padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>{g.trim()}</span>)}</div></div>}
-          {film.actors && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Casting</div><div style={{ lineHeight: 1.6 }}>{film.actors}</div></div>}
+          {film.overview && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Synopsis</div><div style={{ lineHeight: 1.5, fontSize: '0.9rem' }}>{film.overview}</div></div>}
+          {film.genres && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Genres</div><div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>{film.genres.split(',').map((g, i) => <span key={i} style={{ background: COLORS.black, color: COLORS.cream, padding: '0.15rem 0.5rem', fontSize: '0.75rem' }}>{g.trim()}</span>)}</div></div>}
+          {film.actors && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Casting</div><div style={{ lineHeight: 1.5, fontSize: '0.9rem' }}>{film.actors}</div></div>}
           {film.status !== 'watched' && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>★ Likes ({film.likes?.length || 0})</div>
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Likes ({film.likes?.length || 0})</div>
               {film.likes?.length > 0 ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                   {film.likes.map(v => (
-                    <span key={v} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.3rem 0.8rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.9rem' }}>
-                      <span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(v).color }}></span>
+                    <span key={v} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0.2rem 0.5rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.8rem' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: getMember(v).color }}></span>
                       {getMember(v).name}
                     </span>
                   ))}
                 </div>
-              ) : <div style={{ color: COLORS.grey }}>—</div>}
+              ) : <div style={{ color: COLORS.grey, fontSize: '0.9rem' }}>—</div>}
             </div>
           )}
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>{film.tmdbId && <a href={`https://www.themoviedb.org/movie/${film.tmdbId}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>TMDB</a>}<a href={`https://www.imdb.com/find/?q=${encodeURIComponent(film.title + ' ' + film.year)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>IMDb</a><a href={`https://www.justwatch.com/fr/recherche?q=${encodeURIComponent(film.title)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.5rem 1rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>JustWatch</a></div>
-          {showDate && <div style={{ marginBottom: '1.5rem' }}><div style={{ fontWeight: 700, fontSize: '0.85rem', color: COLORS.grey, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Date de visionnage</div><div style={{ display: 'flex', gap: '0.5rem' }}><input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: '0.5rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit' }} /><button className="btn" onClick={() => onWatched(date)}>Valider</button></div></div>}
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>{film.tmdbId && <a href={`https://www.themoviedb.org/movie/${film.tmdbId}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>TMDB</a>}<a href={`https://www.imdb.com/find/?q=${encodeURIComponent(film.title + ' ' + film.year)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>IMDb</a><a href={`https://www.justwatch.com/fr/recherche?q=${encodeURIComponent(film.title)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>JustWatch</a></div>
+          {showDate && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Date de visionnage</div><div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}><input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: '0.4rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit', fontSize: '0.9rem' }} /><button className="btn" onClick={() => onWatched(date)}>Valider</button></div></div>}
         </div>
         <div className="modal-actions">
           {film.status === 'proposed' && (
@@ -1322,15 +1352,17 @@ const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, on
                 disabled={!canLike}
                 style={{ opacity: canLike ? 1 : 0.5 }}
               >
-                {isLiked ? '★ Liké' : '☆ Liker'}
+                {isLiked ? 'Like' : 'Liker'}
               </button>
               <button className="btn" onClick={onSchedule}>Programmer</button>
+              {isProposer && <button className="btn" style={{ background: '#c62828' }} onClick={onDelete}>Supprimer</button>}
             </>
           )}
-          {film.status === 'scheduled' && <><button className="btn btn-outline" onClick={onUnschedule}>Déprogrammer</button><button className="btn" onClick={() => setShowDate(true)}>Marquer vu</button></>}
-          {(isProposer || film.status === 'watched') && <button className="btn" style={{ background: '#c62828' }} onClick={onDelete}>Supprimer</button>}
+          {film.status === 'scheduled' && <><button className="btn btn-outline" onClick={onUnschedule}>Deprogrammer</button><button className="btn" onClick={() => setShowDate(true)}>Marquer vu</button></>}
+          {film.status === 'watched' && <button className="btn" style={{ background: '#c62828' }} onClick={onDelete}>Supprimer</button>}
         </div>
       </div>
+      {showPosterPicker && <PosterModal film={film} onClose={() => setShowPosterPicker(false)} onSelect={(url) => { onChangePoster(url); setShowPosterPicker(false); }} />}
     </div>
   );
 };
@@ -1341,14 +1373,70 @@ const AddModal = ({ onClose, onAdd }) => {
   const [results, setResults] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const search = async () => { if (!q.trim()) return; setLoading(true); try { const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&language=fr-FR&query=${encodeURIComponent(q)}`); const data = await res.json(); setResults(data.results?.slice(0, 10) || []); } catch(e) { console.error(e); } setLoading(false); };
-  const select = async (r) => { try { const [det, cred] = await Promise.all([fetch(`https://api.themoviedb.org/3/movie/${r.id}?api_key=${TMDB_KEY}&language=fr-FR`).then(x => x.json()), fetch(`https://api.themoviedb.org/3/movie/${r.id}/credits?api_key=${TMDB_KEY}`).then(x => x.json())]); onAdd({ tmdbId: r.id, title: det.title, year: det.release_date?.split('-')[0] || '', poster: det.poster_path ? TMDB_IMG + det.poster_path : null, director: cred.crew?.find(c => c.job === 'Director')?.name || '', actors: cred.cast?.slice(0, 4).map(a => a.name).join(', ') || '', genres: det.genres?.map(g => g.name).join(', ') || '', overview: det.overview || '', runtime: det.runtime || 0 }); } catch(e) { console.error(e); } };
+  const select = async (r) => { try { const [det, cred] = await Promise.all([fetch(`https://api.themoviedb.org/3/movie/${r.id}?api_key=${TMDB_KEY}&language=fr-FR`).then(x => x.json()), fetch(`https://api.themoviedb.org/3/movie/${r.id}/credits?api_key=${TMDB_KEY}`).then(x => x.json())]); onAdd({ tmdbId: r.id, title: det.title, originalTitle: det.original_title || '', year: det.release_date?.split('-')[0] || '', poster: det.poster_path ? TMDB_IMG + det.poster_path : null, director: cred.crew?.find(c => c.job === 'Director')?.name || '', actors: cred.cast?.slice(0, 4).map(a => a.name).join(', ') || '', genres: det.genres?.map(g => g.name).join(', ') || '', overview: det.overview || '', runtime: det.runtime || 0, country: det.production_countries?.[0]?.iso_3166_1 || '' }); } catch(e) { console.error(e); } };
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-head"><div style={{ fontWeight: 700, fontSize: '1.2rem' }}>Proposer un film</div><button className="modal-close" onClick={onClose}>×</button></div>
         <div className="modal-body">
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}><input className="search-box" placeholder="Titre du film..." value={q} onChange={e => setQ(e.target.value)} onKeyPress={e => e.key === 'Enter' && search()} autoFocus style={{ flex: 1 }} /><button className="btn" onClick={search}>{loading ? '...' : 'Chercher'}</button></div>
-          {results.length > 0 && <div className="search-results">{results.map(r => (<div key={r.id} className="search-result" onClick={() => select(r)}>{r.poster_path ? <img src={TMDB_IMG + r.poster_path} alt="" /> : <div style={{ width: 50, height: 75, background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.cream }}>?</div>}<div><div style={{ fontWeight: 700 }}>{r.title}</div><div style={{ color: COLORS.grey, fontSize: '0.9rem' }}>{r.release_date?.split('-')[0] || '?'}{r.vote_average > 0 && ` · ⭐ ${r.vote_average.toFixed(1)}`}</div></div></div>))}</div>}
+          {results.length > 0 && <div className="search-results">{results.map(r => (<div key={r.id} className="search-result" onClick={() => select(r)}>{r.poster_path ? <img src={TMDB_IMG + r.poster_path} alt="" /> : <div style={{ width: 50, height: 75, background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.cream }}>?</div>}<div><div style={{ fontWeight: 700 }}>{r.title}</div><div style={{ color: COLORS.grey, fontSize: '0.9rem' }}>{r.release_date?.split('-')[0] || '?'}{r.vote_average > 0 && ` · ${r.vote_average.toFixed(1)}`}</div></div></div>))}</div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modal choix d'affiche
+const PosterModal = ({ film, onClose, onSelect }) => {
+  const [posters, setPosters] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  
+  React.useEffect(() => {
+    const fetchPosters = async () => {
+      if (!film.tmdbId) { setLoading(false); return; }
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/movie/${film.tmdbId}/images?api_key=${TMDB_KEY}`);
+        const data = await res.json();
+        setPosters(data.posters?.slice(0, 12) || []);
+      } catch(e) { console.error(e); }
+      setLoading(false);
+    };
+    fetchPosters();
+  }, [film.tmdbId]);
+  
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 700 }}>
+        <div className="modal-head">
+          <div style={{ fontWeight: 700, fontSize: '1.2rem' }}>Choisir une affiche</div>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: COLORS.grey }}>Chargement...</div>
+          ) : posters.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: COLORS.grey }}>Aucune affiche disponible</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.75rem' }}>
+              {posters.map((p, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => onSelect('https://image.tmdb.org/t/p/w342' + p.file_path)}
+                  style={{ 
+                    cursor: 'pointer', 
+                    border: film.poster?.includes(p.file_path) ? `3px solid ${COLORS.red}` : '3px solid transparent',
+                    transition: 'transform 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <img src={'https://image.tmdb.org/t/p/w185' + p.file_path} alt="" style={{ width: '100%', display: 'block' }} />
+                  {p.iso_639_1 && <div style={{ fontSize: '0.7rem', textAlign: 'center', background: COLORS.black, color: COLORS.cream, padding: '0.2rem' }}>{p.iso_639_1.toUpperCase()}</div>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

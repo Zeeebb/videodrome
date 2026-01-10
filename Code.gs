@@ -38,43 +38,82 @@ function loadData() {
   
   const filmsSheet = ss.getSheetByName('Films');
   if (filmsSheet && filmsSheet.getLastRow() > 1) {
-    // Lire les headers pour détecter l'ancien ou nouveau format
+    // Lire les headers pour détecter le format
     const headerRow = filmsSheet.getRange(1, 1, 1, 17).getValues()[0];
     const hasOldFormat = headerRow.includes('votes') || headerRow.includes('favorites');
+    const hasOriginalTitle = headerRow.includes('originalTitle');
     
-    const numCols = hasOldFormat ? 17 : 16;
+    const numCols = hasOriginalTitle ? 17 : (hasOldFormat ? 17 : 16);
     const data = filmsSheet.getRange(2, 1, filmsSheet.getLastRow() - 1, numCols).getValues();
     
     data.forEach(row => {
       if (row[0]) {
-        const film = {
-          id: row[0],
-          title: row[1],
-          year: row[2],
-          poster: row[3],
-          director: row[4],
-          actors: row[5],
-          genres: row[6],
-          overview: row[7],
-          runtime: row[8],
-          country: row[9],
-          tmdbId: row[10],
-          proposedBy: row[11],
-          proposedDate: row[12],
-          status: row[13]
-        };
+        let film;
         
-        if (hasOldFormat) {
-          // Ancien format: votes (col 15), favorites (col 16), watchedDate (col 17)
-          let votes = [];
-          let favorites = [];
+        if (hasOriginalTitle) {
+          // Nouveau format avec originalTitle
+          film = {
+            id: row[0],
+            title: row[1],
+            originalTitle: row[2],
+            year: row[3],
+            poster: row[4],
+            director: row[5],
+            actors: row[6],
+            genres: row[7],
+            overview: row[8],
+            runtime: row[9],
+            country: row[10],
+            tmdbId: row[11],
+            proposedBy: row[12],
+            proposedDate: row[13],
+            status: row[14]
+          };
+          try { film.likes = row[15] ? JSON.parse(row[15]) : []; } catch { film.likes = []; }
+          film.watchedDate = row[16];
+        } else if (hasOldFormat) {
+          // Ancien format avec votes/favorites
+          film = {
+            id: row[0],
+            title: row[1],
+            originalTitle: '',
+            year: row[2],
+            poster: row[3],
+            director: row[4],
+            actors: row[5],
+            genres: row[6],
+            overview: row[7],
+            runtime: row[8],
+            country: row[9],
+            tmdbId: row[10],
+            proposedBy: row[11],
+            proposedDate: row[12],
+            status: row[13]
+          };
+          let votes = [], favorites = [];
           try { votes = row[14] ? JSON.parse(row[14]) : []; } catch { votes = []; }
           try { favorites = row[15] ? JSON.parse(row[15]) : []; } catch { favorites = []; }
-          // Fusionner votes et favorites en likes (sans doublons)
           film.likes = [...new Set([...votes, ...favorites])];
           film.watchedDate = row[16];
         } else {
-          // Nouveau format: likes (col 15), watchedDate (col 16)
+          // Format intermédiaire sans originalTitle
+          film = {
+            id: row[0],
+            title: row[1],
+            originalTitle: '',
+            year: row[2],
+            poster: row[3],
+            director: row[4],
+            actors: row[5],
+            genres: row[6],
+            overview: row[7],
+            runtime: row[8],
+            country: row[9],
+            tmdbId: row[10],
+            proposedBy: row[11],
+            proposedDate: row[12],
+            status: row[13]
+          };
           try { film.likes = row[14] ? JSON.parse(row[14]) : []; } catch { film.likes = []; }
           film.watchedDate = row[15];
         }
@@ -106,10 +145,10 @@ function saveData(data) {
     // Supprimer l'ancienne feuille et en créer une nouvelle avec le bon format
     if (sheet) {
       sheet.clear();
-      sheet.getRange(1, 1, 1, 16).setValues([['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']]);
+      sheet.getRange(1, 1, 1, 17).setValues([['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']]);
     } else {
       sheet = ss.insertSheet('Films');
-      sheet.appendRow(['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']);
+      sheet.appendRow(['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']);
     }
     
     // Ajouter les films
@@ -117,6 +156,7 @@ function saveData(data) {
       const rows = data.films.map(film => [
         film.id || '',
         film.title || '',
+        film.originalTitle || '',
         film.year || '',
         film.poster || '',
         film.director || '',
@@ -132,7 +172,7 @@ function saveData(data) {
         JSON.stringify(film.likes || []),
         film.watchedDate || ''
       ]);
-      sheet.getRange(2, 1, rows.length, 16).setValues(rows);
+      sheet.getRange(2, 1, rows.length, 17).setValues(rows);
     }
   }
   
