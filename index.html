@@ -58,9 +58,11 @@
     /* Mobile responsive */
     @media (max-width: 768px) {
       html, body { overflow-x: hidden; width: 100%; }
-      .header-right { flex-direction: row; gap: 0.5rem !important; align-items: center !important; }
+      .header-right { flex-direction: row; gap: 0.3rem !important; align-items: center !important; flex-shrink: 0 !important; }
       .header-stats { display: none; }
       .header-logo { transform: scale(0.7); transform-origin: left center; }
+      .user-indicator { display: flex !important; flex-shrink: 0 !important; }
+      .user-indicator select { max-width: 80px !important; padding: 0.25rem 0.4rem !important; font-size: 0.7rem !important; }
       .nav-tabs { gap: 0 !important; justify-content: space-around; width: 100%; }
       .nav-tabs button { padding: 0.5rem 0.5rem !important; font-size: 0.7rem !important; flex: 1; text-align: center; }
       .propositions-controls { flex-direction: row; flex-wrap: wrap; align-items: center !important; gap: 0.4rem !important; }
@@ -82,12 +84,12 @@
       .hero-section { padding: 0.75rem !important; }
       .hero-section > div { flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 0.5rem !important; }
       .planning-grid { font-size: 0.75rem; }
-      .user-indicator { display: flex !important; }
       section { overflow-x: hidden; }
     }
     
     @media (max-width: 480px) {
-      .header-logo { transform: scale(0.55); }
+      .header-logo { transform: scale(0.5); }
+      .user-indicator select { max-width: 70px !important; font-size: 0.65rem !important; }
       .nav-tabs button { padding: 0.4rem 0.25rem !important; font-size: 0.6rem !important; }
       .propositions-controls select { padding: 0.35rem 0.4rem !important; font-size: 0.75rem !important; }
       .propositions-controls .btn { padding: 0.35rem 0.5rem !important; font-size: 0.75rem !important; }
@@ -385,12 +387,30 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
   const isLiked = film.likes?.includes(user);
   const canLike = isLiked || userLikesCount < maxLikes;
   
-  // Rotation et décalage aléatoire basé sur l'index (effet vrac) - réduit sur mobile
-  const randomRotation = React.useMemo(() => isMobile ? 0 : ((index * 17) % 11) - 5, [index, isMobile]);
+  // Rotation et décalage aléatoire basé sur l'index (effet vrac) - léger sur mobile
+  const randomRotation = React.useMemo(() => isMobile ? ((index * 17) % 5) - 2 : ((index * 17) % 11) - 5, [index, isMobile]);
   const randomOffset = React.useMemo(() => isMobile ? 0 : ((index * 23) % 20) - 10, [index, isMobile]);
   
   const handleEnter = () => { if (!isMobile) { setIsActive(true); setIsAnimating(true); } };
   const handleLeave = () => { if (!isMobile) { setIsActive(false); setTimeout(() => setIsAnimating(false), 450); } };
+  
+  // Sur mobile: animation cassette au clic, puis ouvre la fiche
+  const handleClick = () => {
+    if (isMobile) {
+      setIsActive(true);
+      setIsAnimating(true);
+      setTimeout(() => {
+        onClick();
+        setTimeout(() => {
+          setIsActive(false);
+          setTimeout(() => setIsAnimating(false), 450);
+        }, 300);
+      }, 400);
+    } else {
+      onClick();
+    }
+  };
+  
   const getZ = () => isActive ? 200 : (isAnimating ? 100 : 1);
   
   return (
@@ -406,17 +426,17 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
       }} 
       onMouseEnter={handleEnter} 
       onMouseLeave={handleLeave} 
-      onClick={onClick}
+      onClick={handleClick}
     >
       <div style={{ 
         position: 'relative', 
         width: boxWidth, 
         height: boxHeight, 
-        transform: isActive ? 'scale(1.35)' : `scale(1) rotate(${randomRotation}deg)`, 
+        transform: isActive ? (isMobile ? 'scale(1.1)' : 'scale(1.35)') : `scale(1) rotate(${randomRotation}deg)`, 
         transformOrigin: 'center center',
         transition: 'transform 0.4s ease',
       }}>
-        {/* Cassette qui sort - réduit sur mobile */}
+        {/* Cassette qui sort */}
         <div style={{ 
           position: 'absolute', 
           top: 0, 
@@ -1059,9 +1079,9 @@ const App = () => {
     <div style={{ overflow: 'hidden', width: '100%' }}>
       {/* Header */}
       <header style={{ background: COLORS.black, padding: '1rem 0 0', position: 'sticky', top: 0, zIndex: 100, overflow: 'hidden', width: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '100%', margin: '0 auto', padding: '0 0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '100%', margin: '0 auto', padding: '0 0.5rem', overflow: 'hidden' }}>
           {/* Logo avec bandes colorées horizontales qui passent SOUS le logo */}
-          <div className="header-logo" style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+          <div className="header-logo" style={{ display: 'flex', alignItems: 'center', position: 'relative', flexShrink: 1, minWidth: 0 }}>
             {/* Bandes colorées horizontales */}
             <div style={{ 
               position: 'absolute', 
@@ -1084,10 +1104,10 @@ const App = () => {
             </div>
           </div>
           
-          <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div className="user-indicator" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(user || 'seb').color, flexShrink: 0 }}></span>
-              <select value={user || ''} onChange={e => setUser(e.target.value)} style={{ background: 'transparent', border: `2px solid ${COLORS.cream}`, color: COLORS.cream, padding: '0.3rem 0.5rem', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', maxWidth: 100 }}>
+          <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <div className="user-indicator" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: getMember(user || 'seb').color, flexShrink: 0 }}></span>
+              <select value={user || ''} onChange={e => setUser(e.target.value)} style={{ background: 'transparent', border: `2px solid ${COLORS.cream}`, color: COLORS.cream, padding: '0.25rem 0.4rem', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem' }}>
                 {Object.entries(MEMBERS).map(([k, m]) => <option key={k} value={k} style={{ background: COLORS.black }}>{m.name}</option>)}
               </select>
             </div>
