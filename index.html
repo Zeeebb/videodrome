@@ -63,15 +63,14 @@
       .header-logo { transform: scale(0.7); transform-origin: left center; }
       .nav-tabs { gap: 0 !important; justify-content: space-around; width: 100%; }
       .nav-tabs button { padding: 0.5rem 0.5rem !important; font-size: 0.7rem !important; flex: 1; text-align: center; }
-      .propositions-controls { flex-direction: row; flex-wrap: wrap; align-items: center !important; gap: 0.4rem !important; padding: 0 0.5rem !important; }
+      .propositions-controls { flex-direction: row; flex-wrap: wrap; align-items: center !important; gap: 0.4rem !important; }
       .propositions-controls .search-box { flex: 1 1 80px !important; min-width: 60px !important; padding: 0.4rem !important; font-size: 0.8rem !important; }
       .likes-counter { font-size: 0.75rem !important; }
-      .films-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; justify-items: center; padding: 0 0.25rem !important; }
-      .vhs-card { transform: scale(0.52) !important; transform-origin: top center !important; margin-bottom: -135px !important; margin-left: 0 !important; margin-right: 0 !important; }
+      .films-grid { display: flex !important; flex-wrap: wrap !important; gap: 0.5rem !important; justify-content: center !important; }
       .detail-modal { max-width: calc(100vw - 2rem) !important; width: calc(100vw - 2rem) !important; max-height: 85vh !important; margin: 1rem !important; }
       .detail-modal .modal-body { padding: 1rem !important; }
       .detail-modal .detail-top { flex-direction: row !important; align-items: flex-start !important; text-align: left !important; gap: 0.75rem !important; }
-      .detail-modal .detail-poster { width: 90px !important; flex-shrink: 0 !important; }
+      .detail-modal .detail-poster { width: 100px !important; flex-shrink: 0 !important; }
       .detail-modal .detail-poster img { width: 100% !important; }
       .detail-modal .detail-poster button { font-size: 0.6rem !important; padding: 0.2rem !important; }
       .modal { max-width: calc(100vw - 2rem); width: calc(100vw - 2rem); margin: 1rem; }
@@ -83,7 +82,6 @@
       .hero-section { padding: 0.75rem !important; }
       .hero-section > div { flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 0.5rem !important; }
       .planning-grid { font-size: 0.75rem; }
-      .loading-screen svg { max-width: 60vw !important; height: auto !important; }
       .user-indicator { display: flex !important; }
       section { overflow-x: hidden; }
     }
@@ -91,10 +89,9 @@
     @media (max-width: 480px) {
       .header-logo { transform: scale(0.55); }
       .nav-tabs button { padding: 0.4rem 0.25rem !important; font-size: 0.6rem !important; }
-      .vhs-card { transform: scale(0.5) !important; margin-bottom: -140px !important; }
       .propositions-controls select { padding: 0.35rem 0.4rem !important; font-size: 0.75rem !important; }
       .propositions-controls .btn { padding: 0.35rem 0.5rem !important; font-size: 0.75rem !important; }
-      .detail-modal .detail-poster { width: 80px !important; }
+      .detail-modal .detail-poster { width: 90px !important; }
     }
   </style>
 </head>
@@ -171,7 +168,7 @@ const VHSPoster = ({ title }) => (
 );
 
 // Cassette VHS SVG (SVG exact fourni, pivoté -90° pour être vertical)
-const VHSTape = ({ title }) => {
+const VHSTape = ({ title, scale = 1 }) => {
   // Fonction pour couper le titre en lignes (max 10 char par ligne, entre les mots)
   const splitTitle = (text) => {
     if (!text || text.length <= 10) return [text];
@@ -206,6 +203,9 @@ const VHSTape = ({ title }) => {
   const lineHeight = fontSize + 4;
   const startY = 81 - ((lines.length - 1) * lineHeight) / 2;
   
+  const tapeWidth = Math.round(290 * scale);
+  const tapeHeight = Math.round(200 * scale);
+  
   return (
     <div style={{ 
       width: '100%', 
@@ -219,8 +219,8 @@ const VHSTape = ({ title }) => {
         viewBox="0 0 274 150" 
         style={{ 
           position: 'absolute',
-          width: '290px',
-          height: '200px',
+          width: tapeWidth,
+          height: tapeHeight,
           transform: 'rotate(-90deg)',
           transformOrigin: 'center center'
         }}
@@ -367,25 +367,38 @@ const LikeSticker = ({ memberId, index }) => {
 const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLikes = 6 }) => {
   const [isActive, setIsActive] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
-  const boxWidth = 200, boxHeight = 295, tapeWidth = 200;
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+  
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  // Dimensions adaptées mobile/desktop
+  const scale = isMobile ? 0.55 : 1;
+  const boxWidth = Math.round(200 * scale);
+  const boxHeight = Math.round(295 * scale);
+  const tapeWidth = Math.round(200 * scale);
+  
   const member = getMember(film.proposedBy);
   const isLiked = film.likes?.includes(user);
   const canLike = isLiked || userLikesCount < maxLikes;
   
-  // Rotation et décalage aléatoire basé sur l'index (effet vrac)
-  const randomRotation = React.useMemo(() => ((index * 17) % 11) - 5, [index]); // -5 à +5 degrés
-  const randomOffset = React.useMemo(() => ((index * 23) % 20) - 10, [index]); // -10 à +10 px
+  // Rotation et décalage aléatoire basé sur l'index (effet vrac) - réduit sur mobile
+  const randomRotation = React.useMemo(() => isMobile ? 0 : ((index * 17) % 11) - 5, [index, isMobile]);
+  const randomOffset = React.useMemo(() => isMobile ? 0 : ((index * 23) % 20) - 10, [index, isMobile]);
   
-  const handleEnter = () => { setIsActive(true); setIsAnimating(true); };
-  const handleLeave = () => { setIsActive(false); setTimeout(() => setIsAnimating(false), 450); };
+  const handleEnter = () => { if (!isMobile) { setIsActive(true); setIsAnimating(true); } };
+  const handleLeave = () => { if (!isMobile) { setIsActive(false); setTimeout(() => setIsAnimating(false), 450); } };
   const getZ = () => isActive ? 200 : (isAnimating ? 100 : 1);
   
   return (
     <div 
       className="vhs-card"
       style={{ 
-        width: boxWidth + tapeWidth * 0.7, 
-        height: boxHeight + 30, 
+        width: boxWidth + (isMobile ? tapeWidth * 0.15 : tapeWidth * 0.7), 
+        height: boxHeight + (isMobile ? 10 : 30), 
         cursor: 'pointer', 
         position: 'relative', 
         zIndex: getZ(),
@@ -403,21 +416,21 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
         transformOrigin: 'center center',
         transition: 'transform 0.4s ease',
       }}>
-        {/* Cassette qui sort - 25px au repos, 65% au hover */}
+        {/* Cassette qui sort - réduit sur mobile */}
         <div style={{ 
           position: 'absolute', 
           top: 0, 
-          right: isActive ? -(tapeWidth * 0.65) : -25, 
+          right: isActive ? -(tapeWidth * 0.65) : (isMobile ? -10 : -25), 
           width: tapeWidth, 
           height: boxHeight, 
           transition: 'right 0.4s ease', 
           zIndex: -1, 
           pointerEvents: 'none',
-          filter: 'drop-shadow(-8px 0 10px rgba(0,0,0,0.4))',
+          filter: isMobile ? 'none' : 'drop-shadow(-8px 0 10px rgba(0,0,0,0.4))',
           borderRadius: '0.5rem',
           overflow: 'hidden'
         }}>
-          <VHSTape title={film.title} />
+          <VHSTape title={film.title} scale={scale} />
         </div>
         
         {/* Boîtier principal avec encoche */}
@@ -503,22 +516,33 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
 // VHS Placeholder vide
 const VHSPlaceholder = ({ index, onClick, isEmpty = false }) => {
   const [isActive, setIsActive] = React.useState(false);
-  const boxWidth = 200, boxHeight = 295, tapeWidth = 200;
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
   
-  const randomRotation = React.useMemo(() => ((index * 17) % 11) - 5, [index]);
-  const randomOffset = React.useMemo(() => ((index * 23) % 20) - 10, [index]);
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  const scale = isMobile ? 0.55 : 1;
+  const boxWidth = Math.round(200 * scale);
+  const boxHeight = Math.round(295 * scale);
+  const tapeWidth = Math.round(200 * scale);
+  
+  const randomRotation = React.useMemo(() => isMobile ? 0 : ((index * 17) % 11) - 5, [index, isMobile]);
+  const randomOffset = React.useMemo(() => isMobile ? 0 : ((index * 23) % 20) - 10, [index, isMobile]);
   
   return (
     <div 
       className="vhs-card"
       style={{ 
-        width: boxWidth + tapeWidth * 0.7, 
-        height: boxHeight + 30, 
+        width: boxWidth + tapeWidth * 0.2, 
+        height: boxHeight + (isMobile ? 10 : 30), 
         cursor: isEmpty ? 'default' : 'pointer', 
         opacity: 0.4,
         marginTop: randomOffset,
       }} 
-      onMouseEnter={() => !isEmpty && setIsActive(true)} 
+      onMouseEnter={() => !isEmpty && !isMobile && setIsActive(true)} 
       onMouseLeave={() => setIsActive(false)} 
       onClick={() => !isEmpty && onClick && onClick()}
     >
@@ -535,7 +559,7 @@ const VHSPlaceholder = ({ index, onClick, isEmpty = false }) => {
           width: '100%', 
           height: '100%', 
           background: '#1a1a1a', 
-          boxShadow: '8px 8px 20px rgba(0,0,0,0.3)', 
+          boxShadow: isMobile ? '4px 4px 10px rgba(0,0,0,0.3)' : '8px 8px 20px rgba(0,0,0,0.3)', 
           overflow: 'hidden', 
           display: 'flex', 
           flexDirection: 'column', 
@@ -548,7 +572,7 @@ const VHSPlaceholder = ({ index, onClick, isEmpty = false }) => {
           {/* Rimlight haut */}
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 1, background: 'linear-gradient(to right, rgba(255,255,255,0.3), transparent)', zIndex: 25 }}></div>
           
-          {!isEmpty && <div style={{ fontSize: '3rem', color: '#333', fontWeight: 700 }}>+</div>}
+          {!isEmpty && <div style={{ fontSize: isMobile ? '2rem' : '3rem', color: '#333', fontWeight: 700 }}>+</div>}
           <div style={{ position: 'absolute', top: '20%', left: '10%', right: '10%', height: 2, background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
           <div style={{ position: 'absolute', top: '35%', left: '15%', right: '15%', height: 2, background: 'repeating-linear-gradient(90deg, #333 0px, #333 4px, transparent 4px, transparent 8px)' }}></div>
         </div>
@@ -844,7 +868,6 @@ const App = () => {
   const [showAdd, setShowAdd] = React.useState(false);
   const [showWheel, setShowWheel] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
-  const [loadingProgress, setLoadingProgress] = React.useState(0);
   const [syncing, setSyncing] = React.useState(false);
   const [toast, setToast] = React.useState(null);
 
@@ -862,23 +885,15 @@ const App = () => {
 
   const loadData = async () => {
     if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') { 
-      // Animation de chargement simulée
-      for (let i = 0; i <= 100; i += 20) {
-        setLoadingProgress(i);
-        await new Promise(r => setTimeout(r, 100));
-      }
       setLoading(false); 
       return; 
     }
     setSyncing(true);
-    setLoadingProgress(20);
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
-      setLoadingProgress(40);
       const res = await fetch(SHEETS_API, { signal: controller.signal });
       clearTimeout(timeoutId);
-      setLoadingProgress(70);
       const data = await res.json();
       if (data.films) setFilms(data.films.map(f => ({ 
         ...f, 
@@ -887,11 +902,9 @@ const App = () => {
         likes: f.likes ? (typeof f.likes === 'string' ? JSON.parse(f.likes) : f.likes) : (f.votes ? (typeof f.votes === 'string' ? JSON.parse(f.votes) : f.votes) : [])
       })));
       if (data.availabilities) setAvail(data.availabilities);
-      setLoadingProgress(100);
       notify('Données synchronisées');
     } catch(e) { 
       console.error('Erreur chargement:', e); 
-      setLoadingProgress(100);
     }
     setSyncing(false);
     setLoading(false);
@@ -1014,7 +1027,7 @@ const App = () => {
 
   if (loading) return (
     <div className="loading-screen">
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="loading-logo">
         <svg viewBox="0 0 771 92" style={{ height: 40, maxWidth: '70vw', width: 'auto', fill: '#f5f0e6' }}>
           <g transform="translate(0,92) scale(0.1,-0.1)">
             <path d="M10 900 c-8 -15 -7 -36 4 -81 9 -33 16 -73 16 -89 0 -15 6 -32 13 -37 6 -6 69 -11 139 -11 155 -2 159 2 134 102 -9 34 -16 74 -16 89 0 38 -27 49 -102 38 -35 -5 -76 -5 -93 0 -50 15 -83 11 -95 -11z"/>
@@ -1033,25 +1046,6 @@ const App = () => {
             <path d="M7134 538 c-7 -11 -10 -80 -15 -336 -3 -151 -2 -165 15 -178 28 -20 544 -14 557 7 8 13 14 98 12 163 -1 16 -7 33 -15 38 -7 5 -58 6 -118 2 -153 -9 -179 -8 -201 12 -25 23 -25 75 1 99 20 18 27 18 127 -1 24 -5 36 -1 52 15 19 19 21 29 15 84 -11 109 -2 104 -228 105 -127 0 -198 -3 -202 -10z"/>
           </g>
         </svg>
-        {/* 5 barres empilées horizontales qui grandissent ensemble */}
-        <div style={{ 
-          width: '70vw', 
-          maxWidth: 250,
-          marginTop: '1rem', 
-          display: 'flex', 
-          flexDirection: 'column',
-          gap: 0,
-          overflow: 'hidden'
-        }}>
-          {Object.values(MEMBERS).map((m, i) => (
-            <div key={i} style={{ 
-              width: `${loadingProgress}%`,
-              height: 5, 
-              background: m.color,
-              transition: 'width 0.3s ease'
-            }}></div>
-          ))}
-        </div>
       </div>
     </div>
   );
