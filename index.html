@@ -391,11 +391,11 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
         transformOrigin: 'center center',
         transition: 'transform 0.4s ease',
       }}>
-        {/* Cassette qui sort - 5px au repos, 65% au hover */}
+        {/* Cassette qui sort - 25px au repos, 65% au hover */}
         <div style={{ 
           position: 'absolute', 
           top: 0, 
-          right: isActive ? -(tapeWidth * 0.65) : -5, 
+          right: isActive ? -(tapeWidth * 0.65) : -25, 
           width: tapeWidth, 
           height: boxHeight, 
           transition: 'right 0.4s ease', 
@@ -819,8 +819,10 @@ const UserSelectModal = ({ onSelect }) => {
 const MAX_LIKES = 6;
 
 const App = () => {
-  const [user, setUser] = React.useState(() => localStorage.getItem('vd_user') || null);
-  const [showUserSelect, setShowUserSelect] = React.useState(() => !localStorage.getItem('vd_user'));
+  // Clé versionnée pour forcer le popup à s'afficher une fois
+  const POPUP_VERSION = 'v2';
+  const [user, setUser] = React.useState(() => localStorage.getItem('vd_user') || 'seb');
+  const [showUserSelect, setShowUserSelect] = React.useState(() => localStorage.getItem('vd_popup_shown') !== POPUP_VERSION);
   const [tab, setTab] = React.useState('propositions');
   const [films, setFilms] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_films')) || []; } catch { return []; } });
   const [avail, setAvail] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_avail')) || {}; } catch { return {}; } });
@@ -843,6 +845,7 @@ const App = () => {
     setUser(userId);
     setShowUserSelect(false);
     localStorage.setItem('vd_user', userId);
+    localStorage.setItem('vd_popup_shown', 'v2');
   };
 
   const loadData = async () => {
@@ -1143,7 +1146,7 @@ const App = () => {
                   )}
                 </div>
 
-                <div className="films-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                <div className="films-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', overflow: 'visible' }}>
                   {finalists.map((f, i) => (
                     <VHSCard 
                       key={f.id} 
@@ -1181,7 +1184,7 @@ const App = () => {
                 </div>
               </div>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Propositions ({filtered.length})</h2>
-              <div className="films-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+              <div className="films-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', overflow: 'visible' }}>
                 {filtered.map((f, i) => <VHSCard key={f.id} film={f} index={i} onClick={() => setSelected(f)} onLike={() => like(f.id)} user={user} userLikesCount={userLikesCount} />)}
                 {[...Array(placeholdersCount)].map((_, i) => <VHSPlaceholder key={`p-${i}`} index={filtered.length + i} onClick={() => setShowAdd(true)} />)}
               </div>
