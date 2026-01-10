@@ -55,12 +55,17 @@
       .modal { max-width: 950px; }
     }
     
+    /* Desktop - logo décalé */
+    @media (min-width: 769px) {
+      .header-logo { margin-left: 3rem !important; }
+    }
+    
     /* Mobile responsive */
     @media (max-width: 768px) {
       html, body { overflow-x: hidden; width: 100%; }
       .header-right { flex-direction: row; gap: 0.3rem !important; align-items: center !important; flex-shrink: 0 !important; }
       .header-stats { display: none; }
-      .header-logo { transform: scale(0.7); transform-origin: left center; }
+      .header-logo { transform: scale(0.7); transform-origin: left center; margin-left: 0 !important; }
       .user-indicator { display: flex !important; flex-shrink: 0 !important; }
       .user-indicator select { max-width: 80px !important; padding: 0.25rem 0.4rem !important; font-size: 0.7rem !important; }
       .nav-tabs { gap: 0 !important; justify-content: space-around; width: 100%; }
@@ -88,7 +93,7 @@
     }
     
     @media (max-width: 480px) {
-      .header-logo { transform: scale(0.5); }
+      .header-logo { transform: scale(0.5); margin-left: 0 !important; }
       .user-indicator select { max-width: 70px !important; font-size: 0.65rem !important; }
       .nav-tabs button { padding: 0.4rem 0.25rem !important; font-size: 0.6rem !important; }
       .propositions-controls select { padding: 0.35rem 0.4rem !important; font-size: 0.75rem !important; }
@@ -377,8 +382,8 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  // Dimensions adaptées mobile/desktop
-  const scale = isMobile ? 0.55 : 1;
+  // Dimensions adaptées mobile/desktop - plus grand sur desktop
+  const scale = isMobile ? 0.55 : 1.15;
   const boxWidth = Math.round(200 * scale);
   const boxHeight = Math.round(295 * scale);
   const tapeWidth = Math.round(200 * scale);
@@ -544,7 +549,7 @@ const VHSPlaceholder = ({ index, onClick, isEmpty = false }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  const scale = isMobile ? 0.55 : 1;
+  const scale = isMobile ? 0.55 : 1.15;
   const boxWidth = Math.round(200 * scale);
   const boxHeight = Math.round(295 * scale);
   const tapeWidth = Math.round(200 * scale);
