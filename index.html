@@ -321,7 +321,7 @@ const LikeSticker = ({ memberId, index }) => {
 };
 
 // VHS Card avec cassette qui sort + rotation/hauteur aléatoire pour effet vrac
-const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLikes = 6, showTiebreakerBubble = false, onTiebreaker, isTiebreakerChoice = false, tiebreakerVoteCount = 0 }) => {
+const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLikes = 6 }) => {
   const [isActive, setIsActive] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
   const boxWidth = 200, boxHeight = 295, tapeWidth = 200;
@@ -351,56 +351,6 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
       onMouseLeave={handleLeave} 
       onClick={onClick}
     >
-      {/* Bulle de vote pour ex-aequo */}
-      {showTiebreakerBubble && isActive && (
-        <div 
-          onClick={(e) => e.stopPropagation()}
-          style={{ 
-            position: 'absolute', 
-            bottom: '100%', 
-            left: '50%', 
-            transform: 'translateX(-50%)',
-            marginBottom: 10,
-            background: COLORS.cream,
-            border: `3px solid ${COLORS.black}`,
-            padding: '0.75rem 1rem',
-            zIndex: 300,
-            boxShadow: '4px 4px 0 rgba(0,0,0,0.3)',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.5rem', textAlign: 'center' }}>
-            Départager ?
-          </div>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onTiebreaker && onTiebreaker(); }}
-            style={{ 
-              background: isTiebreakerChoice ? COLORS.red : COLORS.black,
-              color: COLORS.cream,
-              border: 'none',
-              padding: '0.5rem 1rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              width: '100%'
-            }}
-          >
-            {isTiebreakerChoice ? `✓ Choisi (${tiebreakerVoteCount})` : `Choisir${tiebreakerVoteCount > 0 ? ` (${tiebreakerVoteCount})` : ''}`}
-          </button>
-          {/* Flèche */}
-          <div style={{ 
-            position: 'absolute', 
-            bottom: -10, 
-            left: '50%', 
-            transform: 'translateX(-50%)',
-            width: 0, height: 0,
-            borderLeft: '10px solid transparent',
-            borderRight: '10px solid transparent',
-            borderTop: `10px solid ${COLORS.black}`
-          }}></div>
-        </div>
-      )}
-      
       <div style={{ 
         position: 'relative', 
         width: boxWidth, 
@@ -570,6 +520,223 @@ const VHSPlaceholder = ({ index, onClick }) => {
 };
 
 // Mini VHS Card pour la prochaine séance (Point 6)
+
+// Roue de la fortune style VHS 80s
+const WheelModal = ({ films, onClose, onResult }) => {
+  const [spinning, setSpinning] = React.useState(false);
+  const [rotation, setRotation] = React.useState(0);
+  const [winner, setWinner] = React.useState(null);
+  
+  const segmentAngle = 360 / films.length;
+  
+  // Couleurs VHS retro
+  const colors = ['#e63946', '#f4a261', '#e9c46a', '#2a9d8f', '#457b9d', '#9b5de5', '#f15bb5', '#00bbf9'];
+  
+  const spin = () => {
+    if (spinning) return;
+    setSpinning(true);
+    setWinner(null);
+    
+    // Random entre 5 et 8 tours + position aléatoire
+    const spins = 5 + Math.random() * 3;
+    const extraAngle = Math.random() * 360;
+    const totalRotation = rotation + (spins * 360) + extraAngle;
+    
+    setRotation(totalRotation);
+    
+    // Calculer le gagnant après l'animation
+    setTimeout(() => {
+      const finalAngle = totalRotation % 360;
+      // L'aiguille est en haut (270°), on calcule quel segment est dessous
+      const winnerIndex = Math.floor(((360 - finalAngle + 270 + segmentAngle/2) % 360) / segmentAngle) % films.length;
+      setWinner(films[winnerIndex]);
+      setSpinning(false);
+    }, 4000);
+  };
+  
+  const confirm = () => {
+    if (winner) {
+      onResult(winner);
+    }
+  };
+  
+  return (
+    <div className="modal-bg" onClick={spinning ? null : onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ 
+        background: COLORS.black, 
+        padding: '2rem', 
+        maxWidth: 600, 
+        width: '95%',
+        position: 'relative',
+        border: `4px solid ${COLORS.cream}`
+      }}>
+        {/* Header style VHS */}
+        <div style={{ 
+          background: 'linear-gradient(90deg, #e63946, #f4a261, #e9c46a, #2a9d8f, #457b9d)',
+          height: 6,
+          marginBottom: '1.5rem'
+        }}></div>
+        
+        <h2 style={{ 
+          color: COLORS.cream, 
+          fontSize: '1.8rem', 
+          fontWeight: 700, 
+          textTransform: 'uppercase',
+          textAlign: 'center',
+          marginBottom: '1.5rem',
+          textShadow: '2px 2px 0 #e63946'
+        }}>
+          🎰 La Roue du Destin 🎰
+        </h2>
+        
+        {/* Container de la roue */}
+        <div style={{ position: 'relative', width: 320, height: 320, margin: '0 auto 1.5rem' }}>
+          {/* Aiguille */}
+          <div style={{ 
+            position: 'absolute', 
+            top: -15, 
+            left: '50%', 
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            fontSize: '2rem',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
+          }}>
+            ▼
+          </div>
+          
+          {/* Roue */}
+          <svg 
+            width="320" 
+            height="320" 
+            viewBox="0 0 320 320"
+            style={{ 
+              transform: `rotate(${rotation}deg)`,
+              transition: spinning ? 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
+              filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.5))'
+            }}
+          >
+            {/* Cercle extérieur décoratif */}
+            <circle cx="160" cy="160" r="158" fill="none" stroke={COLORS.cream} strokeWidth="4"/>
+            
+            {/* Segments */}
+            {films.map((film, i) => {
+              const startAngle = i * segmentAngle - 90;
+              const endAngle = startAngle + segmentAngle;
+              const startRad = (startAngle * Math.PI) / 180;
+              const endRad = (endAngle * Math.PI) / 180;
+              const x1 = 160 + 150 * Math.cos(startRad);
+              const y1 = 160 + 150 * Math.sin(startRad);
+              const x2 = 160 + 150 * Math.cos(endRad);
+              const y2 = 160 + 150 * Math.sin(endRad);
+              const largeArc = segmentAngle > 180 ? 1 : 0;
+              
+              // Position du texte
+              const midAngle = ((startAngle + endAngle) / 2 * Math.PI) / 180;
+              const textR = 100;
+              const textX = 160 + textR * Math.cos(midAngle);
+              const textY = 160 + textR * Math.sin(midAngle);
+              const textRotation = (startAngle + endAngle) / 2 + 90;
+              
+              return (
+                <g key={film.id}>
+                  <path 
+                    d={`M160,160 L${x1},${y1} A150,150 0 ${largeArc},1 ${x2},${y2} Z`}
+                    fill={colors[i % colors.length]}
+                    stroke={COLORS.black}
+                    strokeWidth="2"
+                  />
+                  <text
+                    x={textX}
+                    y={textY}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    transform={`rotate(${textRotation}, ${textX}, ${textY})`}
+                    style={{ 
+                      fontSize: films.length > 5 ? 10 : 12, 
+                      fontWeight: 700, 
+                      fill: '#fff',
+                      textShadow: '1px 1px 0 #000'
+                    }}
+                  >
+                    {film.title.length > 15 ? film.title.substring(0, 14) + '…' : film.title}
+                  </text>
+                </g>
+              );
+            })}
+            
+            {/* Centre */}
+            <circle cx="160" cy="160" r="25" fill={COLORS.black} stroke={COLORS.cream} strokeWidth="3"/>
+            <text x="160" y="160" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: 20, fill: COLORS.cream }}>📼</text>
+          </svg>
+        </div>
+        
+        {/* Affichage du gagnant */}
+        {winner && (
+          <div style={{ 
+            background: COLORS.red, 
+            padding: '1rem', 
+            marginBottom: '1.5rem',
+            textAlign: 'center',
+            animation: 'pulse 0.5s ease infinite'
+          }}>
+            <div style={{ color: COLORS.cream, fontSize: '0.9rem', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+              🎉 Le destin a choisi 🎉
+            </div>
+            <div style={{ color: COLORS.cream, fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase' }}>
+              {winner.title}
+            </div>
+          </div>
+        )}
+        
+        {/* Boutons */}
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          {!winner ? (
+            <button 
+              className="btn" 
+              onClick={spin}
+              disabled={spinning}
+              style={{ 
+                fontSize: '1.2rem', 
+                padding: '1rem 2rem',
+                opacity: spinning ? 0.7 : 1
+              }}
+            >
+              {spinning ? '🎰 Ça tourne...' : '🎰 Lancer la roue !'}
+            </button>
+          ) : (
+            <>
+              <button className="btn btn-outline" onClick={() => { setWinner(null); }} style={{ color: COLORS.cream, borderColor: COLORS.cream }}>
+                Relancer
+              </button>
+              <button className="btn" onClick={confirm}>
+                ✓ Programmer "{winner.title}"
+              </button>
+            </>
+          )}
+        </div>
+        
+        {!winner && !spinning && (
+          <button 
+            onClick={onClose}
+            style={{ 
+              position: 'absolute', 
+              top: '1rem', 
+              right: '1rem', 
+              background: 'none', 
+              border: 'none', 
+              color: COLORS.cream, 
+              fontSize: '1.5rem', 
+              cursor: 'pointer' 
+            }}
+          >
+            ×
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // App principale
 const MAX_LIKES = 6;
 
@@ -578,11 +745,11 @@ const App = () => {
   const [tab, setTab] = React.useState('propositions');
   const [films, setFilms] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_films')) || []; } catch { return []; } });
   const [avail, setAvail] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_avail')) || {}; } catch { return {}; } });
-  const [tiebreaker, setTiebreaker] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_tiebreaker')) || {}; } catch { return {}; } });
   const [search, setSearch] = React.useState('');
   const [sort, setSort] = React.useState('likes');
   const [selected, setSelected] = React.useState(null);
   const [showAdd, setShowAdd] = React.useState(false);
+  const [showWheel, setShowWheel] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [syncing, setSyncing] = React.useState(false);
   const [toast, setToast] = React.useState(null);
@@ -590,7 +757,6 @@ const App = () => {
   React.useEffect(() => { localStorage.setItem('vd_user', user); }, [user]);
   React.useEffect(() => { localStorage.setItem('vd_films', JSON.stringify(films)); }, [films]);
   React.useEffect(() => { localStorage.setItem('vd_avail', JSON.stringify(avail)); }, [avail]);
-  React.useEffect(() => { localStorage.setItem('vd_tiebreaker', JSON.stringify(tiebreaker)); }, [tiebreaker]);
   React.useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
@@ -609,7 +775,6 @@ const App = () => {
         likes: f.likes ? (typeof f.likes === 'string' ? JSON.parse(f.likes) : f.likes) : (f.votes ? (typeof f.votes === 'string' ? JSON.parse(f.votes) : f.votes) : [])
       })));
       if (data.availabilities) setAvail(data.availabilities);
-      if (data.tiebreaker) setTiebreaker(data.tiebreaker);
       notify('Données synchronisées');
     } catch(e) { 
       console.error('Erreur chargement:', e); 
@@ -618,10 +783,10 @@ const App = () => {
     setLoading(false);
   };
 
-  const save = async (f, a, t) => {
+  const save = async (f, a) => {
     if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') return;
     setSyncing(true);
-    try { await fetch(SHEETS_API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ films: f || films, availabilities: a || avail, tiebreaker: t || tiebreaker }) }); } catch(e) { console.error(e); }
+    try { await fetch(SHEETS_API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ films: f || films, availabilities: a || avail }) }); } catch(e) { console.error(e); }
     setSyncing(false);
   };
 
@@ -632,23 +797,35 @@ const App = () => {
   // Compteur de likes de l'utilisateur
   const userLikesCount = proposed.filter(f => f.likes?.includes(user)).length;
 
-  // Tri par likes puis par ancienneté
-  const sortedByLikes = [...proposed].sort((a, b) => {
-    const diff = (b.likes?.length || 0) - (a.likes?.length || 0);
-    if (diff !== 0) return diff;
-    return a.id - b.id; // Plus ancien d'abord en cas d'égalité
-  });
+  // Tri par likes
+  const sortedByLikes = [...proposed].sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
 
-  // Détection des ex-aequo en tête
-  const topLikes = sortedByLikes.length > 0 ? sortedByLikes[0].likes?.length || 0 : 0;
-  const exaequo = topLikes > 0 ? sortedByLikes.filter(f => (f.likes?.length || 0) === topLikes) : [];
-  const hasExaequo = exaequo.length > 1;
+  // Calcul des finalistes : Top 3 OU tous les ex-aequo (le plus grand)
+  const getFinalists = () => {
+    if (sortedByLikes.length === 0) return [];
+    
+    // Films avec au moins 1 like
+    const withLikes = sortedByLikes.filter(f => (f.likes?.length || 0) > 0);
+    if (withLikes.length === 0) return [];
+    
+    const topLikes = withLikes[0].likes?.length || 0;
+    const exaequo = withLikes.filter(f => (f.likes?.length || 0) === topLikes);
+    
+    // Si plus de 3 ex-aequo en tête, on les prend tous
+    if (exaequo.length >= 3) return exaequo;
+    
+    // Sinon on prend le top 3 (ou moins s'il n'y a pas assez de films)
+    return withLikes.slice(0, 3);
+  };
+  
+  const finalists = getFinalists();
+  const canLaunchWheel = finalists.length >= 2 && !scheduled;
 
   const filtered = React.useMemo(() => {
     let r = [...proposed];
     if (search) { const q = search.toLowerCase(); r = r.filter(f => f.title?.toLowerCase().includes(q) || f.director?.toLowerCase().includes(q)); }
     switch(sort) {
-      case 'likes': return r.sort((a, b) => { const diff = (b.likes?.length || 0) - (a.likes?.length || 0); return diff !== 0 ? diff : a.id - b.id; });
+      case 'likes': return r.sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
       case 'recent': return r.sort((a, b) => b.id - a.id);
       case 'year': return r.sort((a, b) => b.year - a.year);
       case 'alpha': return r.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'fr'));
@@ -668,9 +845,8 @@ const App = () => {
   const like = (id) => {
     const film = films.find(f => f.id === id);
     const isLiked = film?.likes?.includes(user);
-    // Vérifier la limite seulement si on ajoute un like
     if (!isLiked && userLikesCount >= MAX_LIKES) {
-      notify(`Maximum ${MAX_LIKES} likes atteint !`);
+      notify(`Maximum ${MAX_LIKES} votes atteint !`);
       return;
     }
     const newFilms = films.map(f => f.id !== id ? f : { ...f, likes: (f.likes || []).includes(user) ? f.likes.filter(v => v !== user) : [...(f.likes || []), user] });
@@ -678,33 +854,15 @@ const App = () => {
     if (selected?.id === id) setSelected(newFilms.find(f => f.id === id));
   };
 
-  // Vote pour départager (1 seul vote par personne)
-  const voteTiebreaker = (filmId) => {
-    const newTiebreaker = { ...tiebreaker, [user]: filmId };
-    setTiebreaker(newTiebreaker);
-    save(null, null, newTiebreaker);
-    notify('Vote enregistré !');
-  };
-
-  // Calcul des votes de départage
-  const tiebreakerVotes = React.useMemo(() => {
-    const votes = {};
-    exaequo.forEach(f => votes[f.id] = 0);
-    Object.values(tiebreaker).forEach(filmId => {
-      if (votes[filmId] !== undefined) votes[filmId]++;
-    });
-    return votes;
-  }, [exaequo, tiebreaker]);
-
-  // Vérifier si tous ont voté pour départager
-  const allVoted = Object.keys(MEMBERS).every(m => tiebreaker[m] !== undefined);
-
   const schedule = (id) => {
     const newFilms = films.map(f => ({ ...f, status: f.id === id ? 'scheduled' : (f.status === 'scheduled' ? 'proposed' : f.status) }));
-    // Reset tiebreaker quand on programme
-    setTiebreaker({});
-    setFilms(newFilms); save(newFilms, null, {}); setSelected(null);
+    setFilms(newFilms); save(newFilms); setSelected(null);
     notify('Film programmé !');
+  };
+  
+  const wheelResult = (film) => {
+    schedule(film.id);
+    setShowWheel(false);
   };
 
   const unschedule = (id) => {
@@ -838,40 +996,34 @@ const App = () => {
             </div>
           </section>
 
-          {/* Section Ex-Aequo (si plusieurs films en tête avec même nombre de likes) */}
-          {hasExaequo && (
+          {/* Section Finalistes avec bouton Roue */}
+          {canLaunchWheel && (
             <section style={{ background: COLORS.red, padding: '2rem 2rem 3rem', position: 'relative', zIndex: 20 }}>
               <div style={{ maxWidth: '90vw', margin: '0 auto' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-                  <h2 style={{ color: COLORS.cream, fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
-                    Ex-æquo ! ({exaequo.length} films à {topLikes} ★)
-                  </h2>
-                  <span style={{ color: COLORS.cream, opacity: 0.8, fontSize: '0.9rem' }}>
-                    — Survole un film pour voter
-                  </span>
-                </div>
-                
-                {/* Indicateur de votes */}
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-                  {Object.entries(MEMBERS).map(([k, m]) => {
-                    const hasVoted = tiebreaker[k] !== undefined;
-                    return (
-                      <div key={k} style={{ 
-                        display: 'flex', alignItems: 'center', gap: '0.3rem', 
-                        padding: '0.3rem 0.6rem', 
-                        background: hasVoted ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
-                        color: COLORS.cream
-                      }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: m.color }}></span>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{m.name}</span>
-                        <span>{hasVoted ? '✓' : '...'}</span>
-                      </div>
-                    );
-                  })}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                  <div>
+                    <h2 style={{ color: COLORS.cream, fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
+                      🎰 Finalistes ({finalists.length})
+                    </h2>
+                    <span style={{ color: COLORS.cream, opacity: 0.8, fontSize: '0.9rem' }}>
+                      Prêts à lancer la roue du destin ?
+                    </span>
+                  </div>
+                  <button 
+                    className="btn" 
+                    onClick={() => setShowWheel(true)}
+                    style={{ 
+                      fontSize: '1.1rem', 
+                      padding: '0.75rem 1.5rem',
+                      animation: 'pulse 2s ease infinite'
+                    }}
+                  >
+                    🎰 Lancer la roue !
+                  </button>
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {exaequo.map((f, i) => (
+                  {finalists.map((f, i) => (
                     <VHSCard 
                       key={f.id} 
                       film={f} 
@@ -880,10 +1032,6 @@ const App = () => {
                       onLike={() => like(f.id)} 
                       user={user} 
                       userLikesCount={userLikesCount}
-                      showTiebreakerBubble={true}
-                      onTiebreaker={() => voteTiebreaker(f.id)}
-                      isTiebreakerChoice={tiebreaker[user] === f.id}
-                      tiebreakerVoteCount={tiebreakerVotes[f.id] || 0}
                     />
                   ))}
                 </div>
@@ -923,6 +1071,7 @@ const App = () => {
 
       {showAdd && <AddModal onClose={() => setShowAdd(false)} onAdd={add} />}
       {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onLike={() => like(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} userLikesCount={userLikesCount} maxLikes={MAX_LIKES} />}
+      {showWheel && <WheelModal films={finalists} onClose={() => setShowWheel(false)} onResult={wheelResult} />}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );

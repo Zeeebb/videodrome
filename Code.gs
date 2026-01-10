@@ -39,7 +39,6 @@ function loadData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const films = [];
   const availabilities = {};
-  let tiebreaker = {};
   
   const filmsSheet = ss.getSheetByName('Films');
   if (filmsSheet && filmsSheet.getLastRow() > 1) {
@@ -68,17 +67,7 @@ function loadData() {
     });
   }
   
-  const tieSheet = ss.getSheetByName('Tiebreaker');
-  if (tieSheet && tieSheet.getLastRow() > 1) {
-    const data = tieSheet.getRange(2, 1, tieSheet.getLastRow() - 1, 2).getValues();
-    data.forEach(row => {
-      if (row[0]) {
-        tiebreaker[row[0]] = row[1];
-      }
-    });
-  }
-  
-  return { films, availabilities, tiebreaker };
+  return { films, availabilities };
 }
 
 function saveData(data) {
@@ -107,18 +96,6 @@ function saveData(data) {
     if (sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
     Object.entries(data.availabilities).forEach(([date, users]) => {
       sheet.appendRow([date, JSON.stringify(users)]);
-    });
-  }
-  
-  if (data.tiebreaker !== undefined) {
-    let sheet = ss.getSheetByName('Tiebreaker');
-    if (!sheet) {
-      sheet = ss.insertSheet('Tiebreaker');
-      sheet.appendRow(['user', 'filmId']);
-    }
-    if (sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
-    Object.entries(data.tiebreaker || {}).forEach(([user, filmId]) => {
-      sheet.appendRow([user, filmId]);
     });
   }
 }
