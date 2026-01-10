@@ -546,9 +546,12 @@ const WheelModal = ({ films, onClose, onResult }) => {
     
     // Calculer le gagnant après l'animation
     setTimeout(() => {
-      const finalAngle = totalRotation % 360;
-      // L'aiguille est en haut (270°), on calcule quel segment est dessous
-      const winnerIndex = Math.floor(((360 - finalAngle + 270 + segmentAngle/2) % 360) / segmentAngle) % films.length;
+      // La roue tourne dans le sens horaire (rotate positif)
+      // L'aiguille est fixe en haut (-90° en coordonnées SVG)
+      // Après rotation de R degrés, le segment sous l'aiguille est celui qui était à l'angle (-90° - R)
+      const R = totalRotation % 360;
+      const normalizedAngle = ((360 - R) % 360); // Angle sur la roue non-tournée qui se trouve maintenant en haut
+      const winnerIndex = Math.floor(normalizedAngle / segmentAngle) % films.length;
       setWinner(films[winnerIndex]);
       setSpinning(false);
     }, 4000);
