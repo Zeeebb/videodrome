@@ -5,12 +5,8 @@
 // INSTRUCTIONS :
 // 1. Dans Google Sheets, va dans Extensions > Apps Script
 // 2. Supprime tout le code existant et colle celui-ci
-// 3. Clique sur "Déployer" > "Nouveau déploiement"
-// 4. Type: "Application Web"
-// 5. Exécuter en tant que: "Moi"
-// 6. Qui a accès: "Tout le monde"
-// 7. Clique "Déployer" et autorise
-// 8. Copie l'URL et colle-la dans index.html (ligne avec SHEETS_API)
+// 3. Clique sur "Déployer" > "Gérer les déploiements" > "Modifier" > Nouvelle version > Déployer
+// 4. (Si nouveau déploiement: Type "Application Web", Exécuter en tant que "Moi", Accès "Tout le monde")
 // =====================================================
 
 function doGet(e) { return handleRequest(e); }
@@ -42,16 +38,47 @@ function loadData() {
   
   const filmsSheet = ss.getSheetByName('Films');
   if (filmsSheet && filmsSheet.getLastRow() > 1) {
-    const data = filmsSheet.getRange(2, 1, filmsSheet.getLastRow() - 1, 16).getValues();
-    const headers = ['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate'];
+    // Lire les headers pour détecter l'ancien ou nouveau format
+    const headerRow = filmsSheet.getRange(1, 1, 1, 17).getValues()[0];
+    const hasOldFormat = headerRow.includes('votes') || headerRow.includes('favorites');
+    
+    const numCols = hasOldFormat ? 17 : 16;
+    const data = filmsSheet.getRange(2, 1, filmsSheet.getLastRow() - 1, numCols).getValues();
+    
     data.forEach(row => {
       if (row[0]) {
-        const film = {};
-        headers.forEach((h, i) => {
-          if (h === 'likes') {
-            try { film[h] = row[i] ? JSON.parse(row[i]) : []; } catch { film[h] = []; }
-          } else { film[h] = row[i]; }
-        });
+        const film = {
+          id: row[0],
+          title: row[1],
+          year: row[2],
+          poster: row[3],
+          director: row[4],
+          actors: row[5],
+          genres: row[6],
+          overview: row[7],
+          runtime: row[8],
+          country: row[9],
+          tmdbId: row[10],
+          proposedBy: row[11],
+          proposedDate: row[12],
+          status: row[13]
+        };
+        
+        if (hasOldFormat) {
+          // Ancien format: votes (col 15), favorites (col 16), watchedDate (col 17)
+          let votes = [];
+          let favorites = [];
+          try { votes = row[14] ? JSON.parse(row[14]) : []; } catch { votes = []; }
+          try { favorites = row[15] ? JSON.parse(row[15]) : []; } catch { favorites = []; }
+          // Fusionner votes et favorites en likes (sans doublons)
+          film.likes = [...new Set([...votes, ...favorites])];
+          film.watchedDate = row[16];
+        } else {
+          // Nouveau format: likes (col 15), watchedDate (col 16)
+          try { film.likes = row[14] ? JSON.parse(row[14]) : []; } catch { film.likes = []; }
+          film.watchedDate = row[15];
+        }
+        
         films.push(film);
       }
     });
@@ -75,16 +102,38 @@ function saveData(data) {
   
   if (data.films) {
     let sheet = ss.getSheetByName('Films');
-    if (!sheet) {
+    
+    // Supprimer l'ancienne feuille et en créer une nouvelle avec le bon format
+    if (sheet) {
+      sheet.clear();
+      sheet.getRange(1, 1, 1, 16).setValues([['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']]);
+    } else {
       sheet = ss.insertSheet('Films');
       sheet.appendRow(['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']);
     }
-    if (sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
-    const headers = ['id', 'title', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate'];
-    data.films.forEach(film => {
-      const row = headers.map(h => h === 'likes' ? JSON.stringify(film[h] || []) : (film[h] || ''));
-      sheet.appendRow(row);
-    });
+    
+    // Ajouter les films
+    if (data.films.length > 0) {
+      const rows = data.films.map(film => [
+        film.id || '',
+        film.title || '',
+        film.year || '',
+        film.poster || '',
+        film.director || '',
+        film.actors || '',
+        film.genres || '',
+        film.overview || '',
+        film.runtime || '',
+        film.country || '',
+        film.tmdbId || '',
+        film.proposedBy || '',
+        film.proposedDate || '',
+        film.status || '',
+        JSON.stringify(film.likes || []),
+        film.watchedDate || ''
+      ]);
+      sheet.getRange(2, 1, rows.length, 16).setValues(rows);
+    }
   }
   
   if (data.availabilities) {
