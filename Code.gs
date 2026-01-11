@@ -276,10 +276,19 @@ function setAvailability(date, user, available) {
     sheet.appendRow(['date', 'users']);
   }
   
+  // Helper pour convertir une date en string YYYY-MM-DD
+  const toDateStr = (d) => {
+    if (d instanceof Date) {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    return String(d);
+  };
+  
   const data = sheet.getDataRange().getValues();
   
   for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === date) {
+    const rowDate = toDateStr(data[i][0]);
+    if (rowDate === date) {
       let users = [];
       try { users = data[i][1] ? JSON.parse(data[i][1]) : []; } catch { users = []; }
       
@@ -413,7 +422,16 @@ function loadData() {
     const data = availSheet.getRange(2, 1, availSheet.getLastRow() - 1, 2).getValues();
     data.forEach(row => {
       if (row[0]) {
-        try { availabilities[row[0]] = row[1] ? JSON.parse(row[1]) : []; } catch { availabilities[row[0]] = []; }
+        // Convertir la date en string YYYY-MM-DD (Google Sheets peut renvoyer un objet Date)
+        let dateKey = row[0];
+        if (row[0] instanceof Date) {
+          dateKey = row[0].getFullYear() + '-' + String(row[0].getMonth() + 1).padStart(2, '0') + '-' + String(row[0].getDate()).padStart(2, '0');
+        } else if (typeof row[0] === 'string' && row[0].includes('/')) {
+          // Format DD/MM/YYYY -> YYYY-MM-DD
+          const parts = row[0].split('/');
+          dateKey = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
+        }
+        try { availabilities[dateKey] = row[1] ? JSON.parse(row[1]) : []; } catch { availabilities[dateKey] = []; }
       }
     });
   }
