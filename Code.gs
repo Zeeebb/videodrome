@@ -281,6 +281,15 @@ function setAvailability(date, user, available) {
     if (d instanceof Date) {
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
+    if (typeof d === 'string') {
+      // Format "Tue Jan 27 2026" -> YYYY-MM-DD
+      if (d.match(/^[A-Za-z]{3} [A-Za-z]{3} \d{1,2} \d{4}/)) {
+        const parsed = new Date(d);
+        if (!isNaN(parsed)) {
+          return parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
+        }
+      }
+    }
     return String(d);
   };
   
@@ -422,14 +431,24 @@ function loadData() {
     const data = availSheet.getRange(2, 1, availSheet.getLastRow() - 1, 2).getValues();
     data.forEach(row => {
       if (row[0]) {
-        // Convertir la date en string YYYY-MM-DD (Google Sheets peut renvoyer un objet Date)
+        // Convertir la date en string YYYY-MM-DD (Google Sheets peut renvoyer différents formats)
         let dateKey = row[0];
         if (row[0] instanceof Date) {
           dateKey = row[0].getFullYear() + '-' + String(row[0].getMonth() + 1).padStart(2, '0') + '-' + String(row[0].getDate()).padStart(2, '0');
-        } else if (typeof row[0] === 'string' && row[0].includes('/')) {
+        } else if (typeof row[0] === 'string') {
+          // Format "Tue Jan 27 2026" -> YYYY-MM-DD
+          if (row[0].match(/^[A-Za-z]{3} [A-Za-z]{3} \d{1,2} \d{4}/)) {
+            const d = new Date(row[0]);
+            if (!isNaN(d)) {
+              dateKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            }
+          }
           // Format DD/MM/YYYY -> YYYY-MM-DD
-          const parts = row[0].split('/');
-          dateKey = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
+          else if (row[0].includes('/')) {
+            const parts = row[0].split('/');
+            dateKey = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
+          }
+          // Sinon garder tel quel (déjà YYYY-MM-DD)
         }
         try { availabilities[dateKey] = row[1] ? JSON.parse(row[1]) : []; } catch { availabilities[dateKey] = []; }
       }
