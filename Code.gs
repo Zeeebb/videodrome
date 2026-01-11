@@ -1,12 +1,16 @@
 // =====================================================
-// VIDEODROME - Google Apps Script
+// VIDEODROME - Google Apps Script v2 (Opérations Atomiques)
 // =====================================================
 // 
 // INSTRUCTIONS :
 // 1. Dans Google Sheets, va dans Extensions > Apps Script
 // 2. Supprime tout le code existant et colle celui-ci
-// 3. Clique sur "Déployer" > "Gérer les déploiements" > "Modifier" > Nouvelle version > Déployer
-// 4. (Si nouveau déploiement: Type "Application Web", Exécuter en tant que "Moi", Accès "Tout le monde")
+// 3. Clique sur "Déployer" > "Nouveau déploiement"
+// 4. Type "Application Web", Exécuter en tant que "Moi", Accès "Tout le monde"
+// 5. Copie l'URL et colle-la dans index.html (SHEETS_API)
+//
+// IMPORTANT: Si tu mets à jour le code, fais un NOUVEAU déploiement
+// (pas juste "modifier"), sinon les changements ne seront pas pris en compte.
 // =====================================================
 
 function doGet(e) { return handleRequest(e); }
@@ -14,21 +18,306 @@ function doPost(e) { return handleRequest(e); }
 
 function handleRequest(e) {
   const lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+  try {
+    lock.waitLock(30000);
+  } catch (e) {
+    return jsonResponse({ error: 'Server busy, please retry' });
+  }
+  
   try {
     if (e.postData) {
       const data = JSON.parse(e.postData.contents);
-      saveData(data);
-      return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+      const action = data.action || 'saveAll';
+      
+      switch(action) {
+        case 'addFilm':
+          return jsonResponse(addFilm(data.film));
+        case 'deleteFilm':
+          return jsonResponse(deleteFilm(data.filmId));
+        case 'updateFilm':
+          return jsonResponse(updateFilm(data.film));
+        case 'addLike':
+          return jsonResponse(addLike(data.filmId, data.user));
+        case 'removeLike':
+          return jsonResponse(removeLike(data.filmId, data.user));
+        case 'setAvailability':
+          return jsonResponse(setAvailability(data.date, data.user, data.available));
+        case 'scheduleFilm':
+          return jsonResponse(scheduleFilm(data.filmId));
+        case 'unscheduleFilm':
+          return jsonResponse(unscheduleFilm(data.filmId));
+        case 'markWatched':
+          return jsonResponse(markWatched(data.filmId, data.date));
+        case 'updatePoster':
+          return jsonResponse(updatePoster(data.filmId, data.poster));
+        case 'saveAll':
+          saveData(data);
+          return jsonResponse({ success: true });
+        default:
+          return jsonResponse({ error: 'Unknown action: ' + action });
+      }
     } else {
-      const data = loadData();
-      return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+      return jsonResponse(loadData());
     }
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ error: error.toString() })).setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse({ error: error.toString() });
   } finally {
     lock.releaseLock();
   }
+}
+
+function jsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// =====================================================
+// OPÉRATIONS ATOMIQUES SUR LES FILMS
+// =====================================================
+
+function addFilm(film) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = getOrCreateFilmsSheet(ss);
+  
+  if (!film.id) film.id = Date.now();
+  
+  const row = [
+    film.id,
+    film.title || '',
+    film.originalTitle || '',
+    film.year || '',
+    film.poster || '',
+    film.director || '',
+    film.actors || '',
+    film.genres || '',
+    film.overview || '',
+    film.runtime || '',
+    film.country || '',
+    film.tmdbId || '',
+    film.proposedBy || '',
+    film.proposedDate || new Date().toISOString().split('T')[0],
+    film.status || 'proposed',
+    JSON.stringify(film.likes || []),
+    film.watchedDate || ''
+  ];
+  
+  sheet.appendRow(row);
+  return { success: true, film: film };
+}
+
+function deleteFilm(filmId) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      sheet.deleteRow(i + 1);
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+function updateFilm(film) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(film.id)) {
+      const row = [
+        film.id,
+        film.title || '',
+        film.originalTitle || '',
+        film.year || '',
+        film.poster || '',
+        film.director || '',
+        film.actors || '',
+        film.genres || '',
+        film.overview || '',
+        film.runtime || '',
+        film.country || '',
+        film.tmdbId || '',
+        film.proposedBy || '',
+        film.proposedDate || '',
+        film.status || 'proposed',
+        JSON.stringify(film.likes || []),
+        film.watchedDate || ''
+      ];
+      sheet.getRange(i + 1, 1, 1, 17).setValues([row]);
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+function addLike(filmId, user) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      let likes = [];
+      try { likes = data[i][15] ? JSON.parse(data[i][15]) : []; } catch { likes = []; }
+      
+      if (!likes.includes(user)) {
+        likes.push(user);
+        sheet.getRange(i + 1, 16).setValue(JSON.stringify(likes));
+      }
+      return { success: true, likes: likes };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+function removeLike(filmId, user) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      let likes = [];
+      try { likes = data[i][15] ? JSON.parse(data[i][15]) : []; } catch { likes = []; }
+      
+      likes = likes.filter(l => l !== user);
+      sheet.getRange(i + 1, 16).setValue(JSON.stringify(likes));
+      return { success: true, likes: likes };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+function scheduleFilm(filmId) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  const data = sheet.getDataRange().getValues();
+  
+  // D'abord, retirer scheduled de tous les films
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][14] === 'scheduled') {
+      sheet.getRange(i + 1, 15).setValue('proposed');
+    }
+  }
+  
+  // Puis mettre le film sélectionné en scheduled
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      sheet.getRange(i + 1, 15).setValue('scheduled');
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+function unscheduleFilm(filmId) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      sheet.getRange(i + 1, 15).setValue('proposed');
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+function markWatched(filmId, date) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      sheet.getRange(i + 1, 15).setValue('watched');
+      sheet.getRange(i + 1, 17).setValue(date || new Date().toISOString().split('T')[0]);
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+function updatePoster(filmId, poster) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      sheet.getRange(i + 1, 5).setValue(poster);
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+// =====================================================
+// OPÉRATIONS ATOMIQUES SUR LES DISPONIBILITÉS
+// =====================================================
+
+function setAvailability(date, user, available) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('Availabilities');
+  
+  if (!sheet) {
+    sheet = ss.insertSheet('Availabilities');
+    sheet.appendRow(['date', 'users']);
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === date) {
+      let users = [];
+      try { users = data[i][1] ? JSON.parse(data[i][1]) : []; } catch { users = []; }
+      
+      if (available && !users.includes(user)) {
+        users.push(user);
+      } else if (!available) {
+        users = users.filter(u => u !== user);
+      }
+      
+      if (users.length > 0) {
+        sheet.getRange(i + 1, 2).setValue(JSON.stringify(users));
+      } else {
+        sheet.deleteRow(i + 1);
+      }
+      return { success: true, users: users };
+    }
+  }
+  
+  // Date pas trouvée, ajouter si available
+  if (available) {
+    sheet.appendRow([date, JSON.stringify([user])]);
+    return { success: true, users: [user] };
+  }
+  
+  return { success: true, users: [] };
+}
+
+// =====================================================
+// CHARGEMENT / SAUVEGARDE COMPLÈTE
+// =====================================================
+
+function getOrCreateFilmsSheet(ss) {
+  let sheet = ss.getSheetByName('Films');
+  if (!sheet) {
+    sheet = ss.insertSheet('Films');
+    sheet.appendRow(['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']);
+  }
+  return sheet;
 }
 
 function loadData() {
@@ -38,7 +327,6 @@ function loadData() {
   
   const filmsSheet = ss.getSheetByName('Films');
   if (filmsSheet && filmsSheet.getLastRow() > 1) {
-    // Lire les headers pour détecter le format
     const headerRow = filmsSheet.getRange(1, 1, 1, 17).getValues()[0];
     const hasOldFormat = headerRow.includes('votes') || headerRow.includes('favorites');
     const hasOriginalTitle = headerRow.includes('originalTitle');
@@ -51,7 +339,6 @@ function loadData() {
         let film;
         
         if (hasOriginalTitle) {
-          // Nouveau format avec originalTitle
           film = {
             id: row[0],
             title: row[1],
@@ -72,7 +359,6 @@ function loadData() {
           try { film.likes = row[15] ? JSON.parse(row[15]) : []; } catch { film.likes = []; }
           film.watchedDate = row[16];
         } else if (hasOldFormat) {
-          // Ancien format avec votes/favorites
           film = {
             id: row[0],
             title: row[1],
@@ -96,7 +382,6 @@ function loadData() {
           film.likes = [...new Set([...votes, ...favorites])];
           film.watchedDate = row[16];
         } else {
-          // Format intermédiaire sans originalTitle
           film = {
             id: row[0],
             title: row[1],
@@ -136,13 +421,13 @@ function loadData() {
   return { films, availabilities };
 }
 
+// Rétrocompatibilité
 function saveData(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
   if (data.films) {
     let sheet = ss.getSheetByName('Films');
     
-    // Supprimer l'ancienne feuille et en créer une nouvelle avec le bon format
     if (sheet) {
       sheet.clear();
       sheet.getRange(1, 1, 1, 17).setValues([['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']]);
@@ -151,7 +436,6 @@ function saveData(data) {
       sheet.appendRow(['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']);
     }
     
-    // Ajouter les films
     if (data.films.length > 0) {
       const rows = data.films.map(film => [
         film.id || '',

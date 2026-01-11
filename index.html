@@ -935,11 +935,30 @@ const App = () => {
     setLoading(false);
   };
 
-  const save = async (f, a) => {
-    if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') return;
+  // Helper pour formater une date locale en YYYY-MM-DD (sans problème de timezone)
+  const toLocalDateStr = (date) => {
+    const d = new Date(date);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  };
+
+  // Appel API atomique
+  const apiCall = async (action, data) => {
+    if (!SHEETS_API || SHEETS_API === 'COLLE_TON_URL_ICI') return { success: true };
     setSyncing(true);
-    try { await fetch(SHEETS_API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ films: f || films, availabilities: a || avail }) }); } catch(e) { console.error(e); }
-    setSyncing(false);
+    try {
+      const res = await fetch(SHEETS_API, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'text/plain' }, 
+        body: JSON.stringify({ action, ...data }) 
+      });
+      const result = await res.json();
+      setSyncing(false);
+      return result;
+    } catch(e) { 
+      console.error(e); 
+      setSyncing(false);
+      return { success: false, error: e.toString() };
+    }
   };
 
   const scheduled = films.find(f => f.status === 'scheduled');
@@ -987,28 +1006,34 @@ const App = () => {
 
   const notify = (msg) => setToast(msg);
 
-  const add = (film) => {
-    const nf = { ...film, id: Date.now(), proposedBy: user, proposedDate: new Date().toISOString(), status: 'proposed', likes: [] };
-    const newFilms = [nf, ...films];
-    setFilms(newFilms); save(newFilms); setShowAdd(false);
+  const add = async (film) => {
+    const nf = { ...film, id: Date.now(), proposedBy: user, proposedDate: toLocalDateStr(new Date()), status: 'proposed', likes: [] };
+    setFilms([nf, ...films]); 
+    setShowAdd(false);
+    await apiCall('addFilm', { film: nf });
     notify(`"${film.title}" ajouté`);
   };
 
-  const like = (id) => {
+  const like = async (id) => {
     const film = films.find(f => f.id === id);
     const isLiked = film?.likes?.includes(user);
     if (!isLiked && userLikesCount >= MAX_LIKES) {
       notify(`Maximum ${MAX_LIKES} votes atteint !`);
       return;
     }
-    const newFilms = films.map(f => f.id !== id ? f : { ...f, likes: (f.likes || []).includes(user) ? f.likes.filter(v => v !== user) : [...(f.likes || []), user] });
-    setFilms(newFilms); save(newFilms);
+    // Mise à jour optimiste locale
+    const newFilms = films.map(f => f.id !== id ? f : { ...f, likes: isLiked ? f.likes.filter(v => v !== user) : [...(f.likes || []), user] });
+    setFilms(newFilms);
     if (selected?.id === id) setSelected(newFilms.find(f => f.id === id));
+    // Appel API atomique
+    await apiCall(isLiked ? 'removeLike' : 'addLike', { filmId: id, user });
   };
 
-  const schedule = (id) => {
+  const schedule = async (id) => {
     const newFilms = films.map(f => ({ ...f, status: f.id === id ? 'scheduled' : (f.status === 'scheduled' ? 'proposed' : f.status) }));
-    setFilms(newFilms); save(newFilms); setSelected(null);
+    setFilms(newFilms); 
+    setSelected(null);
+    await apiCall('scheduleFilm', { filmId: id });
     notify('Film programmé !');
   };
   
@@ -1017,37 +1042,49 @@ const App = () => {
     setShowWheel(false);
   };
 
-  const unschedule = (id) => {
+  const unschedule = async (id) => {
     const newFilms = films.map(f => f.id === id ? { ...f, status: 'proposed' } : f);
-    setFilms(newFilms); save(newFilms); setSelected(null);
+    setFilms(newFilms); 
+    setSelected(null);
+    await apiCall('unscheduleFilm', { filmId: id });
     notify('Film déprogrammé');
   };
 
-  const markWatched = (id, date) => {
-    const newFilms = films.map(f => f.id === id ? { ...f, status: 'watched', watchedDate: date || new Date().toISOString() } : f);
-    setFilms(newFilms); save(newFilms); setSelected(null);
+  const markWatched = async (id, date) => {
+    const watchedDate = date || toLocalDateStr(new Date());
+    const newFilms = films.map(f => f.id === id ? { ...f, status: 'watched', watchedDate } : f);
+    setFilms(newFilms); 
+    setSelected(null);
+    await apiCall('markWatched', { filmId: id, date: watchedDate });
     notify('Film vu !');
   };
 
-  const del = (id) => {
+  const del = async (id) => {
     if (!confirm('Supprimer ce film ?')) return;
     const newFilms = films.filter(f => f.id !== id);
-    setFilms(newFilms); save(newFilms); setSelected(null);
-    notify('Film supprime');
+    setFilms(newFilms); 
+    setSelected(null);
+    await apiCall('deleteFilm', { filmId: id });
+    notify('Film supprimé');
   };
 
-  const changePoster = (id, newPosterUrl) => {
+  const changePoster = async (id, newPosterUrl) => {
     const newFilms = films.map(f => f.id === id ? { ...f, poster: newPosterUrl } : f);
-    setFilms(newFilms); save(newFilms);
+    setFilms(newFilms);
     if (selected?.id === id) setSelected({ ...selected, poster: newPosterUrl });
-    notify('Affiche modifiee');
+    await apiCall('updatePoster', { filmId: id, poster: newPosterUrl });
+    notify('Affiche modifiée');
   };
 
-  const toggleAvail = (date) => {
-    const k = date.toISOString().split('T')[0];
+  const toggleAvail = async (date) => {
+    const k = toLocalDateStr(date);
     const cur = avail[k] || [];
-    const newAvail = { ...avail, [k]: cur.includes(user) ? cur.filter(u => u !== user) : [...cur, user] };
-    setAvail(newAvail); save(null, newAvail);
+    const isAvailable = cur.includes(user);
+    const newUsers = isAvailable ? cur.filter(u => u !== user) : [...cur, user];
+    const newAvail = { ...avail, [k]: newUsers };
+    if (newUsers.length === 0) delete newAvail[k];
+    setAvail(newAvail);
+    await apiCall('setAvailability', { date: k, user, available: !isAvailable });
   };
 
   if (loading) return (
@@ -1254,12 +1291,18 @@ const Planning = ({ avail, user, onToggle }) => {
   const offset = first === 0 ? 6 : first - 1;
   const days = [...Array(offset).fill(null), ...Array.from({length: dim}, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))];
   const mName = month.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  const best = Object.entries(avail).filter(([d]) => new Date(d) >= today).map(([d, u]) => ({ d, u, c: u.length })).sort((a, b) => b.c - a.c).slice(0, 5);
+  
+  // Helper pour formater une date locale en YYYY-MM-DD (sans problème de timezone)
+  const toLocalDateStr = (date) => {
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+  };
+  
+  const best = Object.entries(avail).filter(([d]) => new Date(d + 'T12:00:00') >= today).map(([d, u]) => ({ d, u, c: u.length })).sort((a, b) => b.c - a.c).slice(0, 5);
 
   return (
     <section style={{ background: COLORS.cream, padding: '1.5rem 1rem' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Tes disponibilites</h2>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Tes disponibilités</h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} style={{ padding: '0.5rem 1rem' }}>←</button>
           <div style={{ fontWeight: 700, fontSize: '1rem', textTransform: 'capitalize' }}>{mName}</div>
@@ -1267,7 +1310,35 @@ const Planning = ({ avail, user, onToggle }) => {
         </div>
         <div className="planning-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, background: 'white', padding: '0.75rem' }}>
           {['L','M','M','J','V','S','D'].map((d, i) => <div key={i} style={{ textAlign: 'center', fontWeight: 700, fontSize: '0.7rem', color: COLORS.grey, padding: '0.3rem' }}>{d}</div>)}
-          {days.map((date, i) => { if (!date) return <div key={`e${i}`} />; const k = date.toISOString().split('T')[0]; const members = avail[k] || []; const isA = members.includes(user); const past = date < today; return <div key={k} onClick={() => !past && onToggle(date)} style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: past ? 'default' : 'pointer', border: '2px solid transparent', background: isA ? COLORS.red : 'transparent', color: isA ? COLORS.cream : COLORS.black, opacity: past ? 0.3 : 1, fontSize: '0.85rem' }}><div style={{ fontWeight: 700 }}>{date.getDate()}</div>{members.length > 0 && <div style={{ fontSize: '0.6rem', opacity: 0.8 }}>{members.length}</div>}</div>; })}
+          {days.map((date, i) => { 
+            if (!date) return <div key={`e${i}`} />; 
+            const k = toLocalDateStr(date); 
+            const members = avail[k] || []; 
+            const isA = members.includes(user); 
+            const past = date < today; 
+            return (
+              <div 
+                key={k} 
+                onClick={() => !past && onToggle(date)} 
+                style={{ 
+                  aspectRatio: '1', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: past ? 'default' : 'pointer', 
+                  border: '2px solid transparent', 
+                  background: isA ? COLORS.red : 'transparent', 
+                  color: isA ? COLORS.cream : COLORS.black, 
+                  opacity: past ? 0.3 : 1, 
+                  fontSize: '0.85rem' 
+                }}
+              >
+                <div style={{ fontWeight: 700 }}>{date.getDate()}</div>
+                {members.length > 0 && <div style={{ fontSize: '0.6rem', opacity: 0.8 }}>{members.length}</div>}
+              </div>
+            ); 
+          })}
         </div>
         <div style={{ marginTop: '1.5rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.75rem' }}>Meilleures dates</h3>
