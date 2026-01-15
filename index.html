@@ -74,8 +74,10 @@
       .propositions-controls .search-box { flex: 1 1 80px !important; min-width: 60px !important; padding: 0.4rem !important; font-size: 0.8rem !important; }
       .likes-counter { font-size: 0.75rem !important; }
       .films-grid { display: flex !important; flex-wrap: wrap !important; gap: 0.5rem !important; justify-content: center !important; }
-      .detail-modal { max-width: calc(100vw - 2rem) !important; width: calc(100vw - 2rem) !important; max-height: 85vh !important; margin: 1rem !important; }
+      .detail-modal { max-width: calc(100vw - 2rem) !important; width: calc(100vw - 2rem) !important; max-height: 85vh !important; margin: 1rem !important; padding-left: 0 !important; }
       .detail-modal .modal-body { padding: 1rem !important; }
+      .detail-modal .modal-head { margin-left: 0 !important; padding-left: 0.75rem !important; }
+      .detail-modal .modal-actions { margin-left: 0 !important; padding-left: 0.75rem !important; }
       .detail-modal .detail-top { flex-direction: row !important; align-items: flex-start !important; text-align: left !important; gap: 0.75rem !important; }
       .detail-modal .detail-poster { width: 100px !important; flex-shrink: 0 !important; }
       .detail-modal .detail-poster img { width: 100% !important; }
@@ -451,12 +453,26 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           transition: 'right 0.4s ease', 
           zIndex: -1, 
           pointerEvents: 'none',
-          filter: isMobile ? 'none' : 'drop-shadow(-8px 0 10px rgba(0,0,0,0.4))',
+          filter: isMobile ? 'none' : 'drop-shadow(-12px 4px 15px rgba(0,0,0,0.5))',
           borderRadius: '0.5rem',
           overflow: 'hidden'
         }}>
           <VHSTape title={film.title} scale={scale} />
         </div>
+        
+        {/* Ombre portée de la boîte sur la cassette */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: isActive ? -(tapeWidth * 0.2) : (isMobile ? 5 : 0),
+          width: 30,
+          height: boxHeight,
+          background: 'linear-gradient(to right, rgba(0,0,0,0.5), transparent)',
+          zIndex: 0,
+          pointerEvents: 'none',
+          transition: 'right 0.4s ease',
+          opacity: isActive ? 1 : 0.6
+        }}></div>
         
         {/* Boîtier principal avec encoche */}
         <div style={{ 
@@ -886,7 +902,7 @@ const App = () => {
   const [showUserSelect, setShowUserSelect] = React.useState(() => localStorage.getItem('vd_popup_shown') !== POPUP_VERSION);
   const [tab, setTab] = React.useState('propositions');
   const [films, setFilms] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_films')) || []; } catch { return []; } });
-  const [avail, setAvail] = React.useState(() => { try { return JSON.parse(localStorage.getItem('vd_avail')) || {}; } catch { return {}; } });
+  const [avail, setAvail] = React.useState({});  // Plus de localStorage pour avail - données serveur uniquement
   const [search, setSearch] = React.useState('');
   const [sort, setSort] = React.useState('likes');
   const [selected, setSelected] = React.useState(null);
@@ -898,7 +914,7 @@ const App = () => {
 
   React.useEffect(() => { if (user) localStorage.setItem('vd_user', user); }, [user]);
   React.useEffect(() => { localStorage.setItem('vd_films', JSON.stringify(films)); }, [films]);
-  React.useEffect(() => { localStorage.setItem('vd_avail', JSON.stringify(avail)); }, [avail]);
+  // Supprimé: plus de sauvegarde localStorage pour avail
   React.useEffect(() => { loadData(); }, []);
 
   const selectUser = (userId) => {
@@ -920,14 +936,17 @@ const App = () => {
       const res = await fetch(SHEETS_API, { signal: controller.signal });
       clearTimeout(timeoutId);
       const data = await res.json();
+      console.log('API response:', data); // DEBUG
       if (data.films) setFilms(data.films.map(f => ({ 
         ...f, 
         id: parseInt(f.id) || f.id, 
         year: parseInt(f.year) || 0, 
         likes: f.likes ? (typeof f.likes === 'string' ? JSON.parse(f.likes) : f.likes) : (f.votes ? (typeof f.votes === 'string' ? JSON.parse(f.votes) : f.votes) : [])
       })));
-      if (data.availabilities) setAvail(data.availabilities);
-      notify('Données synchronisées');
+      if (data.availabilities) {
+        console.log('Availabilities loaded:', data.availabilities); // DEBUG
+        setAvail(data.availabilities);
+      }
     } catch(e) { 
       console.error('Erreur chargement:', e); 
     }
@@ -1076,6 +1095,14 @@ const App = () => {
     notify('Affiche modifiée');
   };
 
+  const changeTrailer = async (id, newTrailerUrl) => {
+    const newFilms = films.map(f => f.id === id ? { ...f, trailer: newTrailerUrl } : f);
+    setFilms(newFilms);
+    if (selected?.id === id) setSelected({ ...selected, trailer: newTrailerUrl });
+    await apiCall('updateTrailer', { filmId: id, trailer: newTrailerUrl });
+    notify('Trailer modifié');
+  };
+
   const toggleAvail = async (date) => {
     const k = toLocalDateStr(date);
     const cur = avail[k] || [];
@@ -1201,7 +1228,7 @@ const App = () => {
 
           {/* Section Finalistes - toujours visible */}
           {!scheduled && (
-            <section style={{ background: COLORS.red, padding: '1rem 0.5rem 1.5rem', position: 'relative', zIndex: 20, overflowX: 'hidden', width: '100%' }}>
+            <section style={{ background: COLORS.red, padding: '1rem 0.5rem 1.5rem', position: 'relative', zIndex: 20, overflow: 'hidden', width: '100%' }}>
               <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                   <div>
@@ -1270,12 +1297,12 @@ const App = () => {
         </>
       )}
 
-      {tab === 'planning' && <Planning avail={avail} user={user} onToggle={toggleAvail} />}
+      {tab === 'planning' && <Planning avail={avail} user={user} onToggle={toggleAvail} scheduledFilm={scheduled} />}
       {tab === 'historique' && <Historique watched={watched} onSelect={setSelected} />}
       {tab === 'membres' && <MembresTab films={films} />}
 
       {showAdd && <AddModal onClose={() => setShowAdd(false)} onAdd={add} />}
-      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onLike={() => like(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} onChangePoster={(url) => changePoster(selected.id, url)} userLikesCount={userLikesCount} maxLikes={MAX_LIKES} />}
+      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onLike={() => like(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} onChangePoster={(url) => changePoster(selected.id, url)} onChangeTrailer={(url) => changeTrailer(selected.id, url)} userLikesCount={userLikesCount} maxLikes={MAX_LIKES} />}
       {showWheel && finalists.length >= 2 && <WheelModal films={finalists} onClose={() => setShowWheel(false)} onResult={wheelResult} />}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
@@ -1283,43 +1310,84 @@ const App = () => {
 };
 
 // Planning
-const Planning = ({ avail, user, onToggle }) => {
+const Planning = ({ avail, user, onToggle, scheduledFilm, onScheduleDate }) => {
   const [month, setMonth] = React.useState(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1); });
-  const today = new Date(); today.setHours(0,0,0,0);
+  const [selectedDate, setSelectedDate] = React.useState(null);
+  
+  const today = new Date(); 
+  today.setHours(0,0,0,0);
+  
   const dim = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const first = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
   const offset = first === 0 ? 6 : first - 1;
   const days = [...Array(offset).fill(null), ...Array.from({length: dim}, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))];
   const mName = month.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   
-  // Helper pour formater une date locale en YYYY-MM-DD (sans problème de timezone)
-  const toLocalDateStr = (date) => {
+  // Helper pour formater une date locale en YYYY-MM-DD
+  const toDateStr = (date) => {
     return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
   };
   
-  const best = Object.entries(avail).filter(([d]) => new Date(d + 'T12:00:00') >= today).map(([d, u]) => ({ d, u, c: u.length })).sort((a, b) => b.c - a.c).slice(0, 5);
+  // Meilleures dates (futures uniquement)
+  const best = Object.entries(avail)
+    .filter(([d, users]) => {
+      const date = new Date(d + 'T12:00:00');
+      return date >= today && users && users.length > 0;
+    })
+    .map(([d, u]) => ({ d, u, c: u.length }))
+    .sort((a, b) => b.c - a.c)
+    .slice(0, 5);
+
+  const handleDayClick = (date) => {
+    const past = date < today;
+    if (past) return;
+    onToggle(date);
+  };
 
   return (
     <section style={{ background: COLORS.cream, padding: '1.5rem 1rem' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>Tes disponibilités</h2>
+        
+        {/* Séance programmée */}
+        {scheduledFilm && (
+          <div style={{ background: COLORS.red, color: COLORS.cream, padding: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Prochaine séance</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{scheduledFilm.title}</div>
+            {scheduledFilm.scheduledDate && (
+              <div style={{ marginTop: '0.5rem' }}>{formatDate(scheduledFilm.scheduledDate)}</div>
+            )}
+          </div>
+        )}
+        
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem' }}>
+          Tes disponibilités
+        </h2>
+        
+        {/* Navigation mois */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} style={{ padding: '0.5rem 1rem' }}>←</button>
           <div style={{ fontWeight: 700, fontSize: '1rem', textTransform: 'capitalize' }}>{mName}</div>
           <button className="btn btn-outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} style={{ padding: '0.5rem 1rem' }}>→</button>
         </div>
+        
+        {/* Calendrier */}
         <div className="planning-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, background: 'white', padding: '0.75rem' }}>
-          {['L','M','M','J','V','S','D'].map((d, i) => <div key={i} style={{ textAlign: 'center', fontWeight: 700, fontSize: '0.7rem', color: COLORS.grey, padding: '0.3rem' }}>{d}</div>)}
+          {['L','M','M','J','V','S','D'].map((d, i) => (
+            <div key={i} style={{ textAlign: 'center', fontWeight: 700, fontSize: '0.7rem', color: COLORS.grey, padding: '0.3rem' }}>{d}</div>
+          ))}
           {days.map((date, i) => { 
             if (!date) return <div key={`e${i}`} />; 
-            const k = toLocalDateStr(date); 
+            
+            const k = toDateStr(date); 
             const members = avail[k] || []; 
-            const isA = members.includes(user); 
-            const past = date < today; 
+            const isAvailable = members.includes(user); 
+            const past = date < today;
+            const othersCount = members.filter(m => m !== user).length;
+            
             return (
               <div 
                 key={k} 
-                onClick={() => !past && onToggle(date)} 
+                onClick={() => handleDayClick(date)} 
                 style={{ 
                   aspectRatio: '1', 
                   display: 'flex', 
@@ -1327,29 +1395,59 @@ const Planning = ({ avail, user, onToggle }) => {
                   alignItems: 'center', 
                   justifyContent: 'center', 
                   cursor: past ? 'default' : 'pointer', 
-                  border: '2px solid transparent', 
-                  background: isA ? COLORS.red : 'transparent', 
-                  color: isA ? COLORS.cream : COLORS.black, 
+                  background: isAvailable ? COLORS.red : (othersCount > 0 ? 'rgba(200,50,50,0.15)' : 'transparent'), 
+                  color: isAvailable ? COLORS.cream : COLORS.black, 
                   opacity: past ? 0.3 : 1, 
-                  fontSize: '0.85rem' 
+                  fontSize: '0.85rem',
+                  position: 'relative'
                 }}
               >
                 <div style={{ fontWeight: 700 }}>{date.getDate()}</div>
-                {members.length > 0 && <div style={{ fontSize: '0.6rem', opacity: 0.8 }}>{members.length}</div>}
+                {members.length > 0 && (
+                  <div style={{ fontSize: '0.55rem', opacity: 0.9 }}>
+                    {members.length} dispo{members.length > 1 ? 's' : ''}
+                  </div>
+                )}
               </div>
             ); 
           })}
         </div>
-        <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.75rem' }}>Meilleures dates</h3>
-          {best.length > 0 ? best.map(({ d, u }) => (
-            <div key={d} style={{ display: 'flex', gap: '0.75rem', padding: '0.5rem', background: 'white', marginBottom: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ fontWeight: 700, minWidth: 100, fontSize: '0.85rem' }}>{formatDate(d)}</div>
-              <div style={{ flex: 1, display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>{u.map(x => <span key={x} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '0.15rem 0.4rem', background: 'rgba(0,0,0,0.1)', fontWeight: 700, fontSize: '0.75rem' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: getMember(x).color }}></span>{getMember(x).name}</span>)}</div>
-              <div style={{ fontWeight: 700, color: COLORS.red, fontSize: '0.85rem' }}>{u.length}/5</div>
-            </div>
-          )) : <div style={{ color: COLORS.grey, fontSize: '0.9rem' }}>Pas encore de disponibilites</div>}
+        
+        {/* Légende */}
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', fontSize: '0.75rem', color: COLORS.grey }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ width: 12, height: 12, background: COLORS.red }}></span> Tu es dispo
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ width: 12, height: 12, background: 'rgba(200,50,50,0.15)' }}></span> D'autres sont dispos
+          </div>
         </div>
+        
+        {/* Meilleures dates */}
+        <div style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.75rem' }}>
+            Meilleures dates
+          </h3>
+          {best.length > 0 ? best.map(({ d, u }) => (
+            <div key={d} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', background: 'white', marginBottom: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ fontWeight: 700, minWidth: 110, fontSize: '0.9rem' }}>{formatDate(d)}</div>
+              <div style={{ flex: 1, display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                {u.map(x => (
+                  <span key={x} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '0.15rem 0.4rem', background: getMember(x).color + '22', fontWeight: 600, fontSize: '0.7rem' }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: getMember(x).color }}></span>
+                    {getMember(x).name}
+                  </span>
+                ))}
+              </div>
+              <div style={{ fontWeight: 700, color: u.length >= 3 ? COLORS.red : COLORS.grey, fontSize: '0.85rem' }}>{u.length}/5</div>
+            </div>
+          )) : (
+            <div style={{ color: COLORS.grey, fontSize: '0.9rem', padding: '1rem', background: 'white', textAlign: 'center' }}>
+              Clique sur les jours où tu es disponible
+            </div>
+          )}
+        </div>
+        
       </div>
     </section>
   );
@@ -1409,7 +1507,7 @@ const MembresTab = ({ films }) => {
 };
 
 // Modal détails
-const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, onWatched, onDelete, onChangePoster, userLikesCount = 0, maxLikes = 6 }) => {
+const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, onWatched, onDelete, onChangePoster, onChangeTrailer, userLikesCount = 0, maxLikes = 6 }) => {
   const isLiked = film.likes?.includes(user);
   const canLike = isLiked || userLikesCount < maxLikes;
   const isProposer = film.proposedBy === user;
@@ -1418,12 +1516,56 @@ const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, on
   const [showPosterPicker, setShowPosterPicker] = React.useState(false);
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
   const showOriginalTitle = film.originalTitle && film.originalTitle !== film.title;
+  
+  // Trailer state
+  const [trailerUrl, setTrailerUrl] = React.useState(film.trailer || '');
+  const [trailerLoading, setTrailerLoading] = React.useState(false);
+  const [editingTrailer, setEditingTrailer] = React.useState(false);
+  const [tempTrailerUrl, setTempTrailerUrl] = React.useState('');
+  
+  // Extraire l'ID YouTube d'une URL
+  const getYoutubeId = (url) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+  };
+  
+  // Charger le trailer automatiquement via TMDB
+  React.useEffect(() => {
+    if (film.trailer) {
+      setTrailerUrl(film.trailer);
+      return;
+    }
+    if (!film.tmdbId) return;
+    
+    setTrailerLoading(true);
+    fetch(`https://api.themoviedb.org/3/movie/${film.tmdbId}/videos?api_key=${TMDB_KEY}`)
+      .then(res => res.json())
+      .then(data => {
+        const trailer = data.results?.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'));
+        if (trailer) {
+          setTrailerUrl(`https://www.youtube.com/watch?v=${trailer.key}`);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setTrailerLoading(false));
+  }, [film.tmdbId, film.trailer]);
+  
+  const youtubeId = getYoutubeId(trailerUrl);
+  
+  const saveTrailer = () => {
+    if (tempTrailerUrl && onChangeTrailer) {
+      onChangeTrailer(tempTrailerUrl);
+      setTrailerUrl(tempTrailerUrl);
+    }
+    setEditingTrailer(false);
+  };
 
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal detail-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-head"><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Details</div><button className="modal-close" onClick={onClose}>×</button></div>
-        <div className="modal-body">
+      <div className="modal detail-modal" onClick={e => e.stopPropagation()} style={{ paddingLeft: '50px' }}>
+        <div className="modal-head" style={{ marginLeft: '-50px', paddingLeft: '50px' }}><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Détails</div><button className="modal-close" onClick={onClose}>×</button></div>
+        <div className="modal-body" style={{ paddingLeft: '0' }}>
           <div className="detail-top" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
             <div className="detail-poster" style={{ width: 140, flexShrink: 0 }}>
               {film.poster ? <img src={film.poster} alt="" style={{ width: '100%' }} /> : <div style={{ width: '100%', aspectRatio: '2/3', background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: COLORS.grey }}>VHS</div>}
@@ -1436,6 +1578,56 @@ const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, on
               <div style={{ display: 'inline-block', padding: '0.2rem 0.5rem', color: 'white', fontWeight: 700, fontSize: '0.75rem', background: p.color }}>Par {p.name}</div>
             </div>
           </div>
+          
+          {/* Trailer YouTube */}
+          <div style={{ marginBottom: '1rem' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              Trailer
+              {trailerUrl && !editingTrailer && (
+                <button 
+                  onClick={() => { setTempTrailerUrl(trailerUrl); setEditingTrailer(true); }}
+                  style={{ background: 'transparent', border: 'none', color: COLORS.grey, fontSize: '0.7rem', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  Modifier
+                </button>
+              )}
+            </div>
+            {editingTrailer ? (
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <input 
+                  type="text" 
+                  value={tempTrailerUrl} 
+                  onChange={e => setTempTrailerUrl(e.target.value)} 
+                  placeholder="URL YouTube..." 
+                  style={{ flex: 1, padding: '0.4rem', border: `1px solid ${COLORS.grey}`, fontSize: '0.8rem' }}
+                />
+                <button className="btn" onClick={saveTrailer} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>OK</button>
+                <button className="btn btn-outline" onClick={() => setEditingTrailer(false)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>✕</button>
+              </div>
+            ) : trailerLoading ? (
+              <div style={{ color: COLORS.grey, fontSize: '0.85rem' }}>Chargement...</div>
+            ) : youtubeId ? (
+              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', background: '#000' }}>
+                <iframe 
+                  src={`https://www.youtube.com/embed/${youtubeId}`}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ color: COLORS.grey, fontSize: '0.85rem' }}>Aucun trailer trouvé</span>
+                <button 
+                  onClick={() => { setTempTrailerUrl(''); setEditingTrailer(true); }}
+                  style={{ background: 'transparent', border: `1px solid ${COLORS.grey}`, color: COLORS.grey, padding: '0.2rem 0.5rem', fontSize: '0.7rem', cursor: 'pointer' }}
+                >
+                  Ajouter
+                </button>
+              </div>
+            )}
+          </div>
+          
           {film.overview && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Synopsis</div><div style={{ lineHeight: 1.5, fontSize: '0.9rem' }}>{film.overview}</div></div>}
           {film.genres && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Genres</div><div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>{film.genres.split(',').map((g, i) => <span key={i} style={{ background: COLORS.black, color: COLORS.cream, padding: '0.15rem 0.5rem', fontSize: '0.75rem' }}>{g.trim()}</span>)}</div></div>}
           {film.actors && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Casting</div><div style={{ lineHeight: 1.5, fontSize: '0.9rem' }}>{film.actors}</div></div>}
@@ -1457,7 +1649,7 @@ const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, on
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>{film.tmdbId && <a href={`https://www.themoviedb.org/movie/${film.tmdbId}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>TMDB</a>}<a href={`https://www.imdb.com/find/?q=${encodeURIComponent(film.title + ' ' + film.year)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>IMDb</a><a href={`https://www.justwatch.com/fr/recherche?q=${encodeURIComponent(film.title)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>JustWatch</a></div>
           {showDate && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Date de visionnage</div><div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}><input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: '0.4rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit', fontSize: '0.9rem' }} /><button className="btn" onClick={() => onWatched(date)}>Valider</button></div></div>}
         </div>
-        <div className="modal-actions">
+        <div className="modal-actions" style={{ marginLeft: '-50px', paddingLeft: '50px' }}>
           {film.status === 'proposed' && (
             <>
               <button 
@@ -1466,13 +1658,13 @@ const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, on
                 disabled={!canLike}
                 style={{ opacity: canLike ? 1 : 0.5 }}
               >
-                {isLiked ? 'Like' : 'Liker'}
+                {isLiked ? '♥ Liké' : 'Liker'}
               </button>
               <button className="btn" onClick={onSchedule}>Programmer</button>
               {isProposer && <button className="btn" style={{ background: '#c62828' }} onClick={onDelete}>Supprimer</button>}
             </>
           )}
-          {film.status === 'scheduled' && <><button className="btn btn-outline" onClick={onUnschedule}>Deprogrammer</button><button className="btn" onClick={() => setShowDate(true)}>Marquer vu</button></>}
+          {film.status === 'scheduled' && <><button className="btn btn-outline" onClick={onUnschedule}>Déprogrammer</button><button className="btn" onClick={() => setShowDate(true)}>Marquer vu</button></>}
           {film.status === 'watched' && <button className="btn" style={{ background: '#c62828' }} onClick={onDelete}>Supprimer</button>}
         </div>
       </div>
