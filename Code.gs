@@ -50,6 +50,8 @@ function handleRequest(e) {
           return jsonResponse(markWatched(data.filmId, data.date));
         case 'updatePoster':
           return jsonResponse(updatePoster(data.filmId, data.poster));
+        case 'updateTrailer':
+          return jsonResponse(updateTrailer(data.filmId, data.trailer));
         case 'saveAll':
           saveData(data);
           return jsonResponse({ success: true });
@@ -263,6 +265,28 @@ function updatePoster(filmId, poster) {
   return { success: false, error: 'Film not found' };
 }
 
+function updateTrailer(filmId, trailer) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  // Vérifier si la colonne trailer existe (colonne 18)
+  const headers = sheet.getRange(1, 1, 1, 18).getValues()[0];
+  if (headers[17] !== 'trailer') {
+    // Ajouter le header trailer
+    sheet.getRange(1, 18).setValue('trailer');
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      sheet.getRange(i + 1, 18).setValue(trailer);
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
 // =====================================================
 // OPÉRATIONS ATOMIQUES SUR LES DISPONIBILITÉS
 // =====================================================
@@ -274,29 +298,34 @@ function setAvailability(date, user, available) {
   if (!sheet) {
     sheet = ss.insertSheet('Availabilities');
     sheet.appendRow(['date', 'users']);
+    // Formater la colonne A en texte brut pour éviter conversion de dates
+    sheet.getRange('A:A').setNumberFormat('@');
   }
   
-  // Helper pour convertir une date en string YYYY-MM-DD
-  const toDateStr = (d) => {
-    if (d instanceof Date) {
-      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  // Utiliser getDisplayValues pour éviter les conversions de date
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    // Pas de données, ajouter directement
+    if (available) {
+      sheet.appendRow([date, JSON.stringify([user])]);
+      return { success: true, users: [user] };
     }
-    if (typeof d === 'string') {
-      // Format "Tue Jan 27 2026" -> YYYY-MM-DD
-      if (d.match(/^[A-Za-z]{3} [A-Za-z]{3} \d{1,2} \d{4}/)) {
-        const parsed = new Date(d);
-        if (!isNaN(parsed)) {
-          return parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
-        }
+    return { success: true, users: [] };
+  }
+  
+  const data = sheet.getRange(2, 1, lastRow - 1, 2).getDisplayValues();
+  
+  for (let i = 0; i < data.length; i++) {
+    let rowDate = String(data[i][0]).trim();
+    
+    // Si format DD/MM/YYYY, convertir en YYYY-MM-DD pour comparaison
+    if (rowDate.includes('/')) {
+      const parts = rowDate.split('/');
+      if (parts.length === 3) {
+        rowDate = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
       }
     }
-    return String(d);
-  };
-  
-  const data = sheet.getDataRange().getValues();
-  
-  for (let i = 1; i < data.length; i++) {
-    const rowDate = toDateStr(data[i][0]);
+    
     if (rowDate === date) {
       let users = [];
       try { users = data[i][1] ? JSON.parse(data[i][1]) : []; } catch { users = []; }
@@ -308,9 +337,9 @@ function setAvailability(date, user, available) {
       }
       
       if (users.length > 0) {
-        sheet.getRange(i + 1, 2).setValue(JSON.stringify(users));
+        sheet.getRange(i + 2, 2).setValue(JSON.stringify(users));
       } else {
-        sheet.deleteRow(i + 1);
+        sheet.deleteRow(i + 2);
       }
       return { success: true, users: users };
     }
@@ -349,7 +378,9 @@ function loadData() {
     const hasOldFormat = headerRow.includes('votes') || headerRow.includes('favorites');
     const hasOriginalTitle = headerRow.includes('originalTitle');
     
-    const numCols = hasOriginalTitle ? 17 : (hasOldFormat ? 17 : 16);
+    // Vérifier si colonne trailer existe
+    const hasTrailer = headerRow.includes('trailer');
+    const numCols = hasTrailer ? 18 : (hasOriginalTitle ? 17 : (hasOldFormat ? 17 : 16));
     const data = filmsSheet.getRange(2, 1, filmsSheet.getLastRow() - 1, numCols).getValues();
     
     data.forEach(row => {
@@ -376,6 +407,7 @@ function loadData() {
           };
           try { film.likes = row[15] ? JSON.parse(row[15]) : []; } catch { film.likes = []; }
           film.watchedDate = row[16];
+          if (hasTrailer) film.trailer = row[17] || '';
         } else if (hasOldFormat) {
           film = {
             id: row[0],
@@ -428,29 +460,31 @@ function loadData() {
   
   const availSheet = ss.getSheetByName('Availabilities');
   if (availSheet && availSheet.getLastRow() > 1) {
-    const data = availSheet.getRange(2, 1, availSheet.getLastRow() - 1, 2).getValues();
+    // Utiliser getDisplayValues pour éviter que Google Sheets convertisse les dates
+    const data = availSheet.getRange(2, 1, availSheet.getLastRow() - 1, 2).getDisplayValues();
     data.forEach(row => {
       if (row[0]) {
-        // Convertir la date en string YYYY-MM-DD (Google Sheets peut renvoyer différents formats)
-        let dateKey = row[0];
-        if (row[0] instanceof Date) {
-          dateKey = row[0].getFullYear() + '-' + String(row[0].getMonth() + 1).padStart(2, '0') + '-' + String(row[0].getDate()).padStart(2, '0');
-        } else if (typeof row[0] === 'string') {
-          // Format "Tue Jan 27 2026" -> YYYY-MM-DD
-          if (row[0].match(/^[A-Za-z]{3} [A-Za-z]{3} \d{1,2} \d{4}/)) {
-            const d = new Date(row[0]);
-            if (!isNaN(d)) {
-              dateKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            }
-          }
-          // Format DD/MM/YYYY -> YYYY-MM-DD
-          else if (row[0].includes('/')) {
-            const parts = row[0].split('/');
+        let dateKey = String(row[0]).trim();
+        
+        // Si c'est au format DD/MM/YYYY, convertir en YYYY-MM-DD
+        if (dateKey.includes('/')) {
+          const parts = dateKey.split('/');
+          if (parts.length === 3) {
             dateKey = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
           }
-          // Sinon garder tel quel (déjà YYYY-MM-DD)
         }
-        try { availabilities[dateKey] = row[1] ? JSON.parse(row[1]) : []; } catch { availabilities[dateKey] = []; }
+        
+        // Parser les users
+        let users = [];
+        try { 
+          users = row[1] ? JSON.parse(row[1]) : []; 
+        } catch(e) { 
+          users = []; 
+        }
+        
+        if (users.length > 0) {
+          availabilities[dateKey] = users;
+        }
       }
     });
   }

@@ -74,10 +74,8 @@
       .propositions-controls .search-box { flex: 1 1 80px !important; min-width: 60px !important; padding: 0.4rem !important; font-size: 0.8rem !important; }
       .likes-counter { font-size: 0.75rem !important; }
       .films-grid { display: flex !important; flex-wrap: wrap !important; gap: 0.5rem !important; justify-content: center !important; }
-      .detail-modal { max-width: calc(100vw - 2rem) !important; width: calc(100vw - 2rem) !important; max-height: 85vh !important; margin: 1rem !important; padding-left: 0 !important; }
+      .detail-modal { max-width: calc(100vw - 2rem) !important; width: calc(100vw - 2rem) !important; max-height: 85vh !important; margin: 1rem !important; }
       .detail-modal .modal-body { padding: 1rem !important; }
-      .detail-modal .modal-head { margin-left: 0 !important; padding-left: 0.75rem !important; }
-      .detail-modal .modal-actions { margin-left: 0 !important; padding-left: 0.75rem !important; }
       .detail-modal .detail-top { flex-direction: row !important; align-items: flex-start !important; text-align: left !important; gap: 0.75rem !important; }
       .detail-modal .detail-poster { width: 100px !important; flex-shrink: 0 !important; }
       .detail-modal .detail-poster img { width: 100% !important; }
@@ -89,7 +87,7 @@
       .modal-actions { padding: 0.75rem; flex-direction: column; gap: 0.5rem; }
       .modal-actions button { width: 100%; padding: 0.6rem !important; font-size: 0.85rem !important; }
       .hero-section { padding: 0.75rem !important; }
-      .hero-section > div { flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 0.5rem !important; }
+      .hero-section > div { flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 0.5rem !important; padding-left: 0.5rem !important; }
       .planning-grid { font-size: 0.75rem; }
       section { overflow-x: hidden; }
     }
@@ -460,18 +458,18 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           <VHSTape title={film.title} scale={scale} />
         </div>
         
-        {/* Ombre portée de la boîte sur la cassette */}
+        {/* Ombre portée de la boîte sur la cassette - suit l'encoche */}
         <div style={{
           position: 'absolute',
           top: 0,
-          right: isActive ? -(tapeWidth * 0.2) : (isMobile ? 5 : 0),
-          width: 30,
+          left: '100%',
+          width: 25,
           height: boxHeight,
-          background: 'linear-gradient(to right, rgba(0,0,0,0.5), transparent)',
+          background: 'linear-gradient(to right, rgba(0,0,0,0.55), rgba(0,0,0,0.2) 40%, transparent)',
           zIndex: 0,
           pointerEvents: 'none',
-          transition: 'right 0.4s ease',
-          opacity: isActive ? 1 : 0.6
+          clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 60%, 100% 57%, 100% 43%, 0 40%)',
+          opacity: isMobile ? 0 : 1
         }}></div>
         
         {/* Boîtier principal avec encoche */}
@@ -1200,7 +1198,7 @@ const App = () => {
         <>
           {/* Hero - Prochaine séance avec VHSCard */}
           <section className="hero-section" style={{ background: COLORS.cream, padding: '1rem 0.5rem 1.5rem', overflowX: 'hidden', width: '100%' }}>
-            <div style={{ maxWidth: '100%', margin: '0 auto', display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap', padding: '0 0.5rem', justifyContent: 'center' }}>
+            <div style={{ maxWidth: '100%', margin: '0 auto', display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap', padding: '0 0.5rem 0 50px', justifyContent: 'center' }}>
               {/* VHSCard ou Placeholder */}
               {scheduled ? (
                 <VHSCard film={scheduled} index={99} onClick={() => setSelected(scheduled)} onLike={() => like(scheduled.id)} user={user} userLikesCount={userLikesCount} />
@@ -1563,9 +1561,9 @@ const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, on
 
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal detail-modal" onClick={e => e.stopPropagation()} style={{ paddingLeft: '50px' }}>
-        <div className="modal-head" style={{ marginLeft: '-50px', paddingLeft: '50px' }}><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Détails</div><button className="modal-close" onClick={onClose}>×</button></div>
-        <div className="modal-body" style={{ paddingLeft: '0' }}>
+      <div className="modal detail-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head"><div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Détails</div><button className="modal-close" onClick={onClose}>×</button></div>
+        <div className="modal-body">
           <div className="detail-top" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
             <div className="detail-poster" style={{ width: 140, flexShrink: 0 }}>
               {film.poster ? <img src={film.poster} alt="" style={{ width: '100%' }} /> : <div style={{ width: '100%', aspectRatio: '2/3', background: COLORS.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: COLORS.grey }}>VHS</div>}
@@ -1649,7 +1647,7 @@ const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, on
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>{film.tmdbId && <a href={`https://www.themoviedb.org/movie/${film.tmdbId}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>TMDB</a>}<a href={`https://www.imdb.com/find/?q=${encodeURIComponent(film.title + ' ' + film.year)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>IMDb</a><a href={`https://www.justwatch.com/fr/recherche?q=${encodeURIComponent(film.title)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>JustWatch</a></div>
           {showDate && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Date de visionnage</div><div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}><input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: '0.4rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit', fontSize: '0.9rem' }} /><button className="btn" onClick={() => onWatched(date)}>Valider</button></div></div>}
         </div>
-        <div className="modal-actions" style={{ marginLeft: '-50px', paddingLeft: '50px' }}>
+        <div className="modal-actions">
           {film.status === 'proposed' && (
             <>
               <button 
