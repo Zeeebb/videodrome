@@ -451,8 +451,7 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           transition: 'right 0.4s ease', 
           zIndex: -1, 
           pointerEvents: 'none',
-          borderRadius: '0.5rem',
-          overflow: 'hidden'
+          filter: isMobile ? 'none' : 'drop-shadow(8px 4px 6px rgba(0,0,0,0.5))'
         }}>
           <VHSTape title={film.title} scale={scale} />
         </div>
@@ -465,8 +464,7 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           background: '#000', 
           boxShadow: isActive ? '0 25px 50px rgba(0,0,0,0.5)' : '8px 8px 20px rgba(0,0,0,0.3)', 
           overflow: 'hidden',
-          clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)',
-          filter: (!isMobile && isActive) ? 'drop-shadow(10px 0 8px rgba(0,0,0,0.5))' : 'none'
+          clipPath: 'polygon(0 0, 100% 0, 100% 40%, 94% 43%, 94% 57%, 100% 60%, 100% 100%, 0 100%)'
         }}>
           {/* Stickers likes (étoiles) - en bas à droite */}
           {film.likes?.map((v, i) => <LikeSticker key={`l-${v}`} memberId={v} index={i} />)}
