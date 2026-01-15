@@ -454,6 +454,18 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           filter: isMobile ? 'none' : 'drop-shadow(8px 4px 6px rgba(0,0,0,0.5))'
         }}>
           <VHSTape title={film.title} scale={scale} />
+          {/* Ombre de la boîte sur la cassette */}
+          {!isMobile && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '50%',
+              height: '100%',
+              background: 'linear-gradient(to right, rgba(0,0,0,0.4), transparent)',
+              pointerEvents: 'none'
+            }}></div>
+          )}
         </div>
         
         {/* Boîtier principal avec encoche */}
