@@ -33,6 +33,10 @@
     .sync-icon { display: inline-block; animation: spin 1s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     
+    /* VHS Aging Effects */
+    .vhs-scratch { position: absolute; }
+    .vhs-wear-mark { position: absolute; background: rgba(235, 225, 205, 0.55); transform: translate(-50%, -50%); }
+    
     /* Adaptation grandes résolutions */
     @media (min-width: 1600px) {
       body { font-size: 1.1rem; }
@@ -370,6 +374,206 @@ const LikeSticker = ({ memberId, index }) => {
   );
 };
 
+// ========================================
+// VHS AGING EFFECTS - Fonctions de génération
+// ========================================
+
+// Générer des rayures aléatoires
+const generateScratches = (seed, count = 8) => {
+  const scratches = [];
+  let rand = seed;
+  const seededRandom = () => {
+    rand = (rand * 9301 + 49297) % 233280;
+    return rand / 233280;
+  };
+  
+  for (let i = 0; i < count; i++) {
+    const isVertical = seededRandom() > 0.5;
+    const length = 15 + seededRandom() * 70;
+    const thickness = 0.4 + seededRandom() * 1.2;
+    const position = 8 + seededRandom() * 84;
+    const opacity = 0.04 + seededRandom() * 0.12;
+    const isDark = seededRandom() > 0.4;
+    const angle = -4 + seededRandom() * 8;
+    
+    scratches.push({ isVertical, length, thickness, position, opacity, isDark, angle });
+  }
+  return scratches;
+};
+
+// Générer des marques d'usure polygonales
+const generateWearMarks = (seed, count = 80) => {
+  const marks = [];
+  let rand = seed * 3;
+  const seededRandom = () => {
+    rand = (rand * 9301 + 49297) % 233280;
+    return rand / 233280;
+  };
+  
+  // Générer un polygone irrégulier
+  const generatePolygon = (randomFunc) => {
+    const points = 5 + Math.floor(randomFunc() * 4);
+    const angles = [];
+    for (let i = 0; i < points; i++) {
+      angles.push((360 / points) * i + (randomFunc() - 0.5) * 30);
+    }
+    const coords = angles.map(angle => {
+      const rad = angle * Math.PI / 180;
+      const radius = 40 + randomFunc() * 20;
+      const x = 50 + Math.cos(rad) * radius;
+      const y = 50 + Math.sin(rad) * radius;
+      return `${x}% ${y}%`;
+    });
+    return `polygon(${coords.join(', ')})`;
+  };
+  
+  // Marques sur les bords
+  for (let i = 0; i < count; i++) {
+    const edge = Math.floor(seededRandom() * 4);
+    const size = 2 + seededRandom() * 4;
+    const position = seededRandom() * 100;
+    const clipPath = generatePolygon(seededRandom);
+    
+    let top, left;
+    if (edge === 0) {
+      top = 0;
+      left = position;
+    } else if (edge === 1) {
+      left = 100;
+      top = position;
+    } else if (edge === 2) {
+      top = 100;
+      left = position;
+    } else {
+      left = 0;
+      top = position;
+    }
+    
+    marks.push({ size, top, left, clipPath });
+  }
+  
+  // Marques dans les coins
+  const cornerMarksCount = Math.floor(count * 0.4);
+  for (let i = 0; i < cornerMarksCount; i++) {
+    const corner = Math.floor(seededRandom() * 4);
+    const size = 2.5 + seededRandom() * 5;
+    const spread = seededRandom() * 10;
+    const clipPath = generatePolygon(seededRandom);
+    
+    let top, left;
+    const onHorizontalEdge = seededRandom() > 0.5;
+    
+    if (corner === 0) {
+      if (onHorizontalEdge) {
+        top = 0;
+        left = spread;
+      } else {
+        left = 0;
+        top = spread;
+      }
+    } else if (corner === 1) {
+      if (onHorizontalEdge) {
+        top = 0;
+        left = 100 - spread;
+      } else {
+        left = 100;
+        top = spread;
+      }
+    } else if (corner === 2) {
+      if (onHorizontalEdge) {
+        top = 100;
+        left = 100 - spread;
+      } else {
+        left = 100;
+        top = 100 - spread;
+      }
+    } else {
+      if (onHorizontalEdge) {
+        top = 100;
+        left = spread;
+      } else {
+        left = 0;
+        top = 100 - spread;
+      }
+    }
+    
+    marks.push({ size, top, left, clipPath });
+  }
+  
+  return marks;
+};
+
+// Composant des effets de vieillissement
+const VHSAgingEffects = ({ filmId }) => {
+  const scratches = React.useMemo(() => generateScratches(filmId, 8), [filmId]);
+  const wearMarks = React.useMemo(() => generateWearMarks(filmId, 100), [filmId]);
+  
+  return (
+    <>
+      {/* Vignetage inversé */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: `
+          linear-gradient(to right, rgba(235,230,210,0.32) 0%, rgba(240,235,215,0.12) 8%, transparent 16%, transparent 84%, rgba(240,235,215,0.12) 92%, rgba(235,230,210,0.32) 100%),
+          linear-gradient(to bottom, rgba(235,230,210,0.32) 0%, rgba(240,235,215,0.12) 8%, transparent 16%, transparent 84%, rgba(240,235,215,0.12) 92%, rgba(235,230,210,0.32) 100%)
+        `,
+        pointerEvents: 'none',
+        zIndex: 18
+      }}></div>
+      
+      {/* Centre sombre + grain */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: `
+          radial-gradient(ellipse at center, rgba(0,0,0,0.24) 0%, transparent 58%),
+          url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><filter id="noise"><feTurbulence baseFrequency="0.8" numOctaves="3" /></filter><rect width="300" height="300" filter="url(%23noise)" opacity="0.11"/></svg>')
+        `,
+        pointerEvents: 'none',
+        mixBlendMode: 'multiply',
+        zIndex: 20
+      }}></div>
+      
+      {/* Rayures */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 19 }}>
+        {scratches.map((scratch, i) => (
+          <div
+            key={`scratch-${i}`}
+            className="vhs-scratch"
+            style={{
+              width: scratch.isVertical ? `${scratch.thickness}px` : `${scratch.length}%`,
+              height: scratch.isVertical ? `${scratch.length}%` : `${scratch.thickness}px`,
+              left: scratch.isVertical ? `${scratch.position}%` : `${(100 - scratch.length) / 2}%`,
+              top: scratch.isVertical ? `${(100 - scratch.length) / 2}%` : `${scratch.position}%`,
+              transform: `rotate(${scratch.angle}deg)`,
+              background: scratch.isDark ? `rgba(0,0,0,${scratch.opacity})` : `rgba(255,255,255,${scratch.opacity})`,
+              transformOrigin: 'center'
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Marques d'usure */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 21 }}>
+        {wearMarks.map((mark, i) => (
+          <div
+            key={`wear-${i}`}
+            className="vhs-wear-mark"
+            style={{
+              width: `${mark.size}px`,
+              height: `${mark.size}px`,
+              top: `${mark.top}%`,
+              left: `${mark.left}%`,
+              clipPath: mark.clipPath
+            }}
+          />
+        ))}
+      </div>
+    </>
+  );
+};
+
 // VHS Card avec cassette qui sort + rotation/hauteur aléatoire pour effet vrac
 const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLikes = 6 }) => {
   const [isActive, setIsActive] = React.useState(false);
@@ -483,7 +687,10 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           
           {/* Poster */}
           {film.poster ? (
-            <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(1.03)' }} />
+            <>
+              <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.94) contrast(0.91) saturate(0.85)' }} />
+              <VHSAgingEffects filmId={film.id} />
+            </>
           ) : (
             <VHSPoster title={film.title} />
           )}
