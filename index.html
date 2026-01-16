@@ -1020,6 +1020,13 @@ const App = () => {
   const notify = (msg) => setToast(msg);
 
   const add = async (film) => {
+    // Vérifier si le film existe déjà (par tmdbId)
+    const existingFilm = films.find(f => f.tmdbId && f.tmdbId === film.tmdbId);
+    if (existingFilm) {
+      notify(`"${film.title}" est déjà dans la liste (proposé par ${getMember(existingFilm.proposedBy).name})`);
+      return;
+    }
+    
     const nf = { ...film, id: Date.now(), proposedBy: user, proposedDate: toLocalDateStr(new Date()), status: 'proposed', likes: [] };
     setFilms([nf, ...films]); 
     setShowAdd(false);
