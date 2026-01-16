@@ -515,8 +515,8 @@ const VHSAgingEffects = ({ filmId }) => {
         position: 'absolute',
         inset: 0,
         background: `
-          linear-gradient(to right, rgba(235,230,210,0.32) 0%, rgba(240,235,215,0.12) 8%, transparent 16%, transparent 84%, rgba(240,235,215,0.12) 92%, rgba(235,230,210,0.32) 100%),
-          linear-gradient(to bottom, rgba(235,230,210,0.32) 0%, rgba(240,235,215,0.12) 8%, transparent 16%, transparent 84%, rgba(240,235,215,0.12) 92%, rgba(235,230,210,0.32) 100%)
+          linear-gradient(to right, rgba(235,230,210,0.22) 0%, rgba(240,235,215,0.08) 8%, transparent 16%, transparent 84%, rgba(240,235,215,0.08) 92%, rgba(235,230,210,0.22) 100%),
+          linear-gradient(to bottom, rgba(235,230,210,0.22) 0%, rgba(240,235,215,0.08) 8%, transparent 16%, transparent 84%, rgba(240,235,215,0.08) 92%, rgba(235,230,210,0.22) 100%)
         `,
         pointerEvents: 'none',
         zIndex: 18
@@ -688,7 +688,7 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
           {/* Poster */}
           {film.poster ? (
             <>
-              <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.94) contrast(0.91) saturate(0.85)' }} />
+              <img src={film.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.97) contrast(0.91) saturate(0.85)' }} />
               <VHSAgingEffects filmId={film.id} />
             </>
           ) : (
@@ -712,7 +712,7 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
             position: 'absolute', 
             top: 0, 
             left: 0, 
-            width: 1, 
+            width: 3, 
             height: '100%', 
             background: `linear-gradient(to bottom, ${COLORS.cream}, transparent)`,
             zIndex: 25,
@@ -725,7 +725,7 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
             top: 0, 
             left: 0, 
             width: '100%', 
-            height: 1, 
+            height: 3, 
             background: `linear-gradient(to right, ${COLORS.cream}, transparent)`,
             zIndex: 25,
             pointerEvents: 'none'
