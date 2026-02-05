@@ -92,6 +92,7 @@
       .modal-actions button { width: 100%; padding: 0.6rem !important; font-size: 0.85rem !important; }
       .hero-section { padding: 0.75rem !important; }
       .hero-section > div { flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 0.5rem !important; padding-left: 0.5rem !important; }
+      .hero-section > div > div:first-child { margin-left: 0 !important; }
       .planning-grid { font-size: 0.75rem; }
       section { overflow-x: hidden; }
     }
@@ -575,7 +576,7 @@ const VHSAgingEffects = ({ filmId }) => {
 };
 
 // VHS Card avec cassette qui sort + rotation/hauteur aléatoire pour effet vrac
-const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLikes = 6 }) => {
+const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLikes = 6, sizeMultiplier = 1 }) => {
   const [isActive, setIsActive] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
@@ -587,7 +588,8 @@ const VHSCard = ({ film, index, onClick, onLike, user, userLikesCount = 0, maxLi
   }, []);
   
   // Dimensions adaptées mobile/desktop - plus grand sur desktop
-  const scale = isMobile ? 0.55 : 1.15;
+  const baseScale = isMobile ? 0.55 : 1.15;
+  const scale = baseScale * sizeMultiplier;
   const boxWidth = Math.round(200 * scale);
   const boxHeight = Math.round(295 * scale);
   const tapeWidth = Math.round(200 * scale);
@@ -1361,7 +1363,7 @@ const App = () => {
   const placeholdersCount = Math.max(0, 6 - filtered.length);
 
   return (
-    <div style={{ overflow: 'hidden', width: '100%' }}>
+    <div style={{ overflowX: 'clip', width: '100%' }}>
       {/* Header */}
       <header style={{ background: COLORS.black, padding: '1rem 0 0', position: 'sticky', top: 0, zIndex: 100, overflow: 'hidden', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '100%', margin: '0 auto', padding: '0 0.5rem', overflow: 'hidden' }}>
@@ -1415,21 +1417,23 @@ const App = () => {
       {tab === 'propositions' && (
         <>
           {/* Hero - Prochaine séance avec VHSCard */}
-          <section className="hero-section" style={{ background: COLORS.cream, padding: '1rem 0.5rem 1.5rem', overflowX: 'hidden', width: '100%' }}>
+          <section className="hero-section" style={{ background: COLORS.cream, padding: '1.5rem 0.5rem 2rem', width: '100%', position: 'relative', zIndex: 101 }}>
             <div style={{ maxWidth: '100%', margin: '0 auto', display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap', padding: '0 0.5rem 0 50px', justifyContent: 'center' }}>
               {/* VHSCard ou Placeholder */}
+              <div style={{ marginLeft: 150 }}>
               {scheduled ? (
-                <VHSCard film={scheduled} index={99} onClick={() => setSelected(scheduled)} onLike={() => like(scheduled.id)} user={user} userLikesCount={userLikesCount} />
+                <VHSCard film={scheduled} index={99} onClick={() => setSelected(scheduled)} onLike={() => like(scheduled.id)} user={user} userLikesCount={userLikesCount} sizeMultiplier={1.3} />
               ) : (
                 <VHSPlaceholder index={99} onClick={() => setShowAdd(true)} />
               )}
-              <div style={{ flex: '1 1 200px', paddingTop: '0.5rem', minWidth: 0 }}>
-                <div style={{ display: 'inline-block', background: COLORS.red, color: COLORS.cream, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em', padding: '0.25rem 0.5rem', transform: 'rotate(-3deg)', marginBottom: '0.5rem' }}>PROCHAINE SEANCE</div>
+              </div>
+              <div style={{ flex: '1 1 200px', paddingTop: '1.5rem', minWidth: 0 }}>
+                <div style={{ display: 'inline-block', background: COLORS.red, color: COLORS.cream, fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', padding: '0.3rem 0.6rem', transform: 'rotate(-3deg)', marginBottom: '0.75rem' }}>PROCHAINE SEANCE</div>
                 {scheduled ? (
                   <>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '0.4rem' }}>{scheduled.title}</h1>
-                    <div style={{ fontSize: '0.95rem', color: COLORS.grey, marginBottom: '0.75rem' }}>{scheduled.year} · {scheduled.director}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', marginBottom: '0.75rem' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: getMember(scheduled.proposedBy).color }}></span><span style={{ fontWeight: 700 }}>Par {getMember(scheduled.proposedBy).name}</span></div>
+                    <h1 style={{ fontSize: '1.8rem', fontWeight: 700, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '0.5rem' }}>{scheduled.title}</h1>
+                    <div style={{ fontSize: '1.05rem', color: COLORS.grey, marginBottom: '0.85rem' }}>{scheduled.year} · {scheduled.director}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem', marginBottom: '0.85rem' }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: getMember(scheduled.proposedBy).color }}></span><span style={{ fontWeight: 700 }}>Par {getMember(scheduled.proposedBy).name}</span></div>
                     {scheduled.scheduledDate ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <span style={{ background: COLORS.red, color: COLORS.cream, padding: '0.3rem 0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>{formatDate(scheduled.scheduledDate)}</span>
@@ -1444,9 +1448,9 @@ const App = () => {
                   </>
                 ) : (
                   <>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '0.4rem', opacity: 0.3 }}>EN ATTENTE</h1>
-                    <div style={{ fontSize: '0.95rem', color: COLORS.grey, marginBottom: '0.75rem', opacity: 0.5 }}>Aucun film programme</div>
-                    <div style={{ opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem' }}>Lancez la roue pour programmer un film</div>
+                    <h1 style={{ fontSize: '1.8rem', fontWeight: 700, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '0.5rem', opacity: 0.3 }}>EN ATTENTE</h1>
+                    <div style={{ fontSize: '1.05rem', color: COLORS.grey, marginBottom: '0.85rem', opacity: 0.5 }}>Aucun film programme</div>
+                    <div style={{ opacity: 0.5, fontStyle: 'italic', fontSize: '0.9rem' }}>Lancez la roue pour programmer un film</div>
                   </>
                 )}
               </div>
