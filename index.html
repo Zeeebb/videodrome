@@ -1311,6 +1311,14 @@ const App = () => {
     notify('Trailer modifié');
   };
 
+  const setScheduleDate = async (id, date) => {
+    const newFilms = films.map(f => f.id === id ? { ...f, scheduledDate: date } : f);
+    setFilms(newFilms);
+    if (selected?.id === id) setSelected({ ...selected, scheduledDate: date });
+    await apiCall('setScheduleDate', { filmId: id, date });
+    notify('Date de séance enregistrée');
+  };
+
   const toggleAvail = async (date) => {
     const k = toLocalDateStr(date);
     const cur = avail[k] || [];
@@ -1421,7 +1429,18 @@ const App = () => {
                   <>
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '0.4rem' }}>{scheduled.title}</h1>
                     <div style={{ fontSize: '0.95rem', color: COLORS.grey, marginBottom: '0.75rem' }}>{scheduled.year} · {scheduled.director}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: getMember(scheduled.proposedBy).color }}></span><span style={{ fontWeight: 700 }}>Par {getMember(scheduled.proposedBy).name}</span></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', marginBottom: '0.75rem' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: getMember(scheduled.proposedBy).color }}></span><span style={{ fontWeight: 700 }}>Par {getMember(scheduled.proposedBy).name}</span></div>
+                    {scheduled.scheduledDate ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ background: COLORS.red, color: COLORS.cream, padding: '0.3rem 0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>{formatDate(scheduled.scheduledDate)}</span>
+                        <input type="date" value={scheduled.scheduledDate} onChange={e => setScheduleDate(scheduled.id, e.target.value)} style={{ padding: '0.3rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit', fontSize: '0.8rem', background: COLORS.cream }} />
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <input type="date" onChange={e => setScheduleDate(scheduled.id, e.target.value)} style={{ padding: '0.3rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit', fontSize: '0.8rem', background: COLORS.cream }} />
+                        <span style={{ fontSize: '0.8rem', color: COLORS.grey, fontStyle: 'italic' }}>Choisir une date</span>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>
@@ -1510,7 +1529,7 @@ const App = () => {
       {tab === 'membres' && <MembresTab films={films} />}
 
       {showAdd && <AddModal onClose={() => setShowAdd(false)} onAdd={add} />}
-      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onLike={() => like(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} onChangePoster={(url) => changePoster(selected.id, url)} onChangeTrailer={(url) => changeTrailer(selected.id, url)} userLikesCount={userLikesCount} maxLikes={MAX_LIKES} />}
+      {selected && <DetailModal film={selected} user={user} onClose={() => setSelected(null)} onLike={() => like(selected.id)} onSchedule={() => schedule(selected.id)} onUnschedule={() => unschedule(selected.id)} onWatched={(d) => markWatched(selected.id, d)} onDelete={() => del(selected.id)} onChangePoster={(url) => changePoster(selected.id, url)} onChangeTrailer={(url) => changeTrailer(selected.id, url)} onSetScheduleDate={(d) => setScheduleDate(selected.id, d)} userLikesCount={userLikesCount} maxLikes={MAX_LIKES} />}
       {showWheel && finalists.length >= 2 && <WheelModal films={finalists} onClose={() => setShowWheel(false)} onResult={wheelResult} />}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
@@ -1561,8 +1580,10 @@ const Planning = ({ avail, user, onToggle, scheduledFilm, onScheduleDate }) => {
           <div style={{ background: COLORS.red, color: COLORS.cream, padding: '1rem', marginBottom: '1.5rem' }}>
             <div style={{ fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Prochaine séance</div>
             <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{scheduledFilm.title}</div>
-            {scheduledFilm.scheduledDate && (
-              <div style={{ marginTop: '0.5rem' }}>{formatDate(scheduledFilm.scheduledDate)}</div>
+            {scheduledFilm.scheduledDate ? (
+              <div style={{ marginTop: '0.5rem', fontSize: '1rem' }}>{formatDate(scheduledFilm.scheduledDate)}</div>
+            ) : (
+              <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', opacity: 0.8, fontStyle: 'italic' }}>Date à définir</div>
             )}
           </div>
         )}
@@ -1715,7 +1736,7 @@ const MembresTab = ({ films }) => {
 };
 
 // Modal détails
-const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, onWatched, onDelete, onChangePoster, onChangeTrailer, userLikesCount = 0, maxLikes = 6 }) => {
+const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, onWatched, onDelete, onChangePoster, onChangeTrailer, onSetScheduleDate, userLikesCount = 0, maxLikes = 6 }) => {
   const isLiked = film.likes?.includes(user);
   const canLike = isLiked || userLikesCount < maxLikes;
   const isProposer = film.proposedBy === user;
@@ -1855,6 +1876,15 @@ const DetailModal = ({ film, user, onClose, onLike, onSchedule, onUnschedule, on
             </div>
           )}
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>{film.tmdbId && <a href={`https://www.themoviedb.org/movie/${film.tmdbId}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>TMDB</a>}<a href={`https://www.imdb.com/find/?q=${encodeURIComponent(film.title + ' ' + film.year)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>IMDb</a><a href={`https://www.justwatch.com/fr/recherche?q=${encodeURIComponent(film.title)}`} target="_blank" style={{ background: COLORS.black, color: COLORS.cream, padding: '0.3rem 0.6rem', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>JustWatch</a></div>
+          {film.status === 'scheduled' && (
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Date de la séance</div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <input type="date" value={film.scheduledDate || ''} onChange={e => onSetScheduleDate(e.target.value)} style={{ padding: '0.4rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit', fontSize: '0.9rem' }} />
+                {film.scheduledDate && <span style={{ background: COLORS.red, color: COLORS.cream, padding: '0.3rem 0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>{formatDate(film.scheduledDate)}</span>}
+              </div>
+            </div>
+          )}
           {showDate && <div style={{ marginBottom: '1rem' }}><div style={{ fontWeight: 700, fontSize: '0.8rem', color: COLORS.grey, marginBottom: '0.4rem', textTransform: 'uppercase' }}>Date de visionnage</div><div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}><input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: '0.4rem', border: `2px solid ${COLORS.black}`, fontFamily: 'inherit', fontSize: '0.9rem' }} /><button className="btn" onClick={() => onWatched(date)}>Valider</button></div></div>}
         </div>
         <div className="modal-actions">

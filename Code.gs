@@ -46,6 +46,8 @@ function handleRequest(e) {
           return jsonResponse(scheduleFilm(data.filmId));
         case 'unscheduleFilm':
           return jsonResponse(unscheduleFilm(data.filmId));
+        case 'setScheduleDate':
+          return jsonResponse(setScheduleDate(data.filmId, data.date));
         case 'markWatched':
           return jsonResponse(markWatched(data.filmId, data.date));
         case 'updatePoster':
@@ -99,7 +101,9 @@ function addFilm(film) {
     film.proposedDate || new Date().toISOString().split('T')[0],
     film.status || 'proposed',
     JSON.stringify(film.likes || []),
-    film.watchedDate || ''
+    film.watchedDate || '',
+    film.trailer || '',
+    film.scheduledDate || ''
   ];
   
   sheet.appendRow(row);
@@ -146,9 +150,11 @@ function updateFilm(film) {
         film.proposedDate || '',
         film.status || 'proposed',
         JSON.stringify(film.likes || []),
-        film.watchedDate || ''
+        film.watchedDate || '',
+        film.trailer || '',
+        film.scheduledDate || ''
       ];
-      sheet.getRange(i + 1, 1, 1, 17).setValues([row]);
+      sheet.getRange(i + 1, 1, 1, 19).setValues([row]);
       return { success: true };
     }
   }
@@ -228,6 +234,28 @@ function unscheduleFilm(filmId) {
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][0]) === String(filmId)) {
       sheet.getRange(i + 1, 15).setValue('proposed');
+      sheet.getRange(i + 1, 19).setValue(''); // Clear scheduledDate
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Film not found' };
+}
+
+function setScheduleDate(filmId, date) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Films');
+  if (!sheet) return { success: false, error: 'No Films sheet' };
+  
+  // Vérifier si la colonne scheduledDate existe (colonne 19)
+  const headers = sheet.getRange(1, 1, 1, 19).getValues()[0];
+  if (headers[18] !== 'scheduledDate') {
+    sheet.getRange(1, 19).setValue('scheduledDate');
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(filmId)) {
+      sheet.getRange(i + 1, 19).setValue(date || '');
       return { success: true };
     }
   }
@@ -362,7 +390,7 @@ function getOrCreateFilmsSheet(ss) {
   let sheet = ss.getSheetByName('Films');
   if (!sheet) {
     sheet = ss.insertSheet('Films');
-    sheet.appendRow(['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']);
+    sheet.appendRow(['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate', 'trailer', 'scheduledDate']);
   }
   return sheet;
 }
@@ -380,7 +408,8 @@ function loadData() {
     
     // Vérifier si colonne trailer existe
     const hasTrailer = headerRow.includes('trailer');
-    const numCols = hasTrailer ? 18 : (hasOriginalTitle ? 17 : (hasOldFormat ? 17 : 16));
+    const hasScheduledDate = headerRow.includes('scheduledDate');
+    const numCols = hasScheduledDate ? 19 : (hasTrailer ? 18 : (hasOriginalTitle ? 17 : (hasOldFormat ? 17 : 16)));
     const data = filmsSheet.getRange(2, 1, filmsSheet.getLastRow() - 1, numCols).getValues();
     
     data.forEach(row => {
@@ -408,6 +437,7 @@ function loadData() {
           try { film.likes = row[15] ? JSON.parse(row[15]) : []; } catch { film.likes = []; }
           film.watchedDate = row[16];
           if (hasTrailer) film.trailer = row[17] || '';
+          if (hasScheduledDate) film.scheduledDate = row[18] || '';
         } else if (hasOldFormat) {
           film = {
             id: row[0],
@@ -501,10 +531,10 @@ function saveData(data) {
     
     if (sheet) {
       sheet.clear();
-      sheet.getRange(1, 1, 1, 17).setValues([['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']]);
+      sheet.getRange(1, 1, 1, 19).setValues([['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate', 'trailer', 'scheduledDate']]);
     } else {
       sheet = ss.insertSheet('Films');
-      sheet.appendRow(['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate']);
+      sheet.appendRow(['id', 'title', 'originalTitle', 'year', 'poster', 'director', 'actors', 'genres', 'overview', 'runtime', 'country', 'tmdbId', 'proposedBy', 'proposedDate', 'status', 'likes', 'watchedDate', 'trailer', 'scheduledDate']);
     }
     
     if (data.films.length > 0) {
@@ -525,9 +555,11 @@ function saveData(data) {
         film.proposedDate || '',
         film.status || '',
         JSON.stringify(film.likes || []),
-        film.watchedDate || ''
+        film.watchedDate || '',
+        film.trailer || '',
+        film.scheduledDate || ''
       ]);
-      sheet.getRange(2, 1, rows.length, 17).setValues(rows);
+      sheet.getRange(2, 1, rows.length, 19).setValues(rows);
     }
   }
   
