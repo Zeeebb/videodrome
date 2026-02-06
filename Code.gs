@@ -402,7 +402,7 @@ function loadData() {
   
   const filmsSheet = ss.getSheetByName('Films');
   if (filmsSheet && filmsSheet.getLastRow() > 1) {
-    const headerRow = filmsSheet.getRange(1, 1, 1, 18).getValues()[0];
+    const headerRow = filmsSheet.getRange(1, 1, 1, 19).getValues()[0];
     const hasOldFormat = headerRow.includes('votes') || headerRow.includes('favorites');
     const hasOriginalTitle = headerRow.includes('originalTitle');
     
